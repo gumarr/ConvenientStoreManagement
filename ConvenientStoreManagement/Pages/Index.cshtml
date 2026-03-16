@@ -1,0 +1,122 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-title">Manage Your Store Effortlessly</h1>
+                <p class="hero-subtitle">
+                    Streamline inventory, track sales, and optimize operations all in one place. 
+                    Simple, powerful, and built for convenience stores.
+                </p>
+                <div class="hero-buttons">
+                    <a class="btn btn-primary btn-lg" href="#">Get Started</a>
+                    <a class="btn btn-outline-secondary btn-lg" href="#">Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image">
+                    <svg width="100%" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="400" fill="#F8F9FB"/>
+                        <rect x="20" y="40" width="360" height="280" rx="12" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+                        <rect x="40" y="60" width="320" height="30" rx="4" fill="#F3F4F6"/>
+                        <rect x="40" y="110" width="140" height="20" rx="3" fill="#E5E7EB"/>
+                        <rect x="40" y="145" width="320" height="12" rx="2" fill="#F3F4F6"/>
+                        <rect x="40" y="170" width="320" height="12" rx="2" fill="#F3F4F6"/>
+                        <rect x="40" y="195" width="200" height="12" rx="2" fill="#F3F4F6"/>
+                        <circle cx="200" cy="340" r="35" fill="#3B82F6" opacity="0.1"/>
+                        <circle cx="80" cy="360" r="25" fill="#10B981" opacity="0.1"/>
+                        <circle cx="340" cy="350" r="30" fill="#F59E0B" opacity="0.1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">Powerful Features for Modern Retail</h2>
+
+        <div class="row features-grid">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" rx="8" fill="#EFF6FF"/>
+                            <path d="M12 18H28M12 24H20M16 12H24C25.1046 12 26 12.8954 26 14V28C26 29.1046 25.1046 30 24 30H16C14.8954 30 14 29.1046 14 28V14C14 12.8954 14.8954 12 16 12Z" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Inventory Management</h3>
+                    <p class="feature-description">
+                        Track stock levels in real-time, set automatic reorder points, and minimize out-of-stock situations.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" rx="8" fill="#F0FDF4"/>
+                            <path d="M14 20H26M20 14V26M12 28H28C29.1046 28 30 27.1046 30 26V14C30 12.8954 29.1046 12 28 12H12C10.8954 12 10 12.8954 10 14V26C10 27.1046 10.8954 28 12 28Z" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Sales Tracking</h3>
+                    <p class="feature-description">
+                        Monitor transactions, analyze sales trends, and gain insights into your store's performance.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" rx="8" fill="#FEF3C7"/>
+                            <path d="M20 12V28M28 20H12M26.8284 13.1716C27.4065 12.5935 28.5935 12.5935 29.1716 13.1716C29.7497 13.7497 29.7497 14.9366 29.1716 15.5147L28 16.6863M11.1716 26.8284C10.5935 27.4065 10.5935 28.5935 11.1716 29.1716C11.7497 29.7497 12.9366 29.7497 13.5147 29.1716L14.6863 28" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Operations</h3>
+                    <p class="feature-description">
+                        Manage daily operations, schedule tasks, and optimize your store's workflow efficiently.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" rx="8" fill="#F3E8FF"/>
+                            <path d="M20 12C15.5817 12 12 15.5817 12 20C12 24.4183 15.5817 28 20 28C24.4183 28 28 24.4183 28 20C28 15.5817 24.4183 12 20 12ZM20 14.5V20L24 22.5" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Reports & Analytics</h3>
+                    <p class="feature-description">
+                        Generate comprehensive reports and data-driven insights to make better business decisions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Transform Your Store?</h2>
+            <p class="cta-subtitle">
+                Join hundreds of store managers who trust our platform to simplify their operations.
+            </p>
+            <a class="btn btn-primary btn-lg" href="#">Start Your Free Trial</a>
+        </div>
+    </div>
+</section>
