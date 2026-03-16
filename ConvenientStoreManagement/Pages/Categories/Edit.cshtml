@@ -1,0 +1,48 @@
+@page
+@model ConvenientStoreManagement.Pages.Categories.EditModel
+
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>@ViewData["Title"]</h2>
+            <hr />
+
+            <form method="post">
+                <input type="hidden" asp-for="Category.CategoryId" />
+                <input type="hidden" asp-for="Category.CreatedDate" />
+
+                <div class="mb-3">
+                    <label asp-for="Category.CategoryName" class="form-label">Category Name</label>
+                    <input asp-for="Category.CategoryName" class="form-control" />
+                    <span asp-validation-for="Category.CategoryName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Category.Description" class="form-label">Description</label>
+                    <textarea asp-for="Category.Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Category.Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="Category.IsActive" class="form-check-input" />
+                    <label asp-for="Category.IsActive" class="form-check-label">Active</label>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,72 @@
+@page
+@model ConvenientStoreManagement.Pages.Sales.EditModel
+
+@{
+    ViewData["Title"] = "Edit Sale";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>@ViewData["Title"]</h2>
+            <hr />
+
+            <form method="post">
+                <input type="hidden" asp-for="Sale.SaleId" />
+
+                <div class="mb-3">
+                    <label asp-for="Sale.CustomerId" class="form-label">Customer</label>
+                    <select asp-for="Sale.CustomerId" asp-items="Model.CustomerList" class="form-control">
+                        <option value="">-- Select Customer --</option>
+                    </select>
+                    <span asp-validation-for="Sale.CustomerId" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Sale.TotalAmount" class="form-label">Total Amount</label>
+                        <input asp-for="Sale.TotalAmount" class="form-control" step="0.01" />
+                        <span asp-validation-for="Sale.TotalAmount" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Sale.PaidAmount" class="form-label">Paid Amount</label>
+                        <input asp-for="Sale.PaidAmount" class="form-control" step="0.01" />
+                        <span asp-validation-for="Sale.PaidAmount" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Sale.DiscountAmount" class="form-label">Discount Amount</label>
+                        <input asp-for="Sale.DiscountAmount" class="form-control" step="0.01" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Sale.PaymentMethod" class="form-label">Payment Method</label>
+                        <input asp-for="Sale.PaymentMethod" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Sale.Notes" class="form-label">Notes</label>
+                    <textarea asp-for="Sale.Notes" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="Sale.IsCompleted" class="form-check-input" />
+                    <label asp-for="Sale.IsCompleted" class="form-check-label">Completed</label>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
