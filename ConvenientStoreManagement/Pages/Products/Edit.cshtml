@@ -1,0 +1,88 @@
+@page "{id:int}"
+@model ConvenientStoreManagement.Pages.Products.EditModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h3 class="card-title">Edit Product</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Input.ProductId" />
+                    <input type="hidden" asp-for="Input.ImageUrl" />
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Name" class="form-label fw-medium"></label>
+                            <input asp-for="Input.Name" class="form-control" />
+                            <span asp-validation-for="Input.Name" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.CategoryId" class="form-label fw-medium"></label>
+                            <select asp-for="Input.CategoryId" asp-items="Model.CategoryList" class="form-select"></select>
+                            <span asp-validation-for="Input.CategoryId" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Price" class="form-label fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Input.Price" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Input.Price" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Stock" class="form-label fw-medium"></label>
+                            <input asp-for="Input.Stock" class="form-control" />
+                            <span asp-validation-for="Input.Stock" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Status" class="form-label fw-medium"></label>
+                            <select asp-for="Input.Status" class="form-select">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                            <span asp-validation-for="Input.Status" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-medium">Current Image</label>
+                            @if (!string.IsNullOrEmpty(Model.Input.ImageUrl))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.Input.ImageUrl" alt="Current image" class="img-thumbnail" style="max-height: 100px" />
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-2">No image uploaded.</p>
+                            }
+                            
+                            <label asp-for="Input.ImageFile" class="form-label fw-medium">Upload New Image</label>
+                            <input asp-for="Input.ImageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png" />
+                            <div class="form-text">Upload to replace current image. Max size 2MB.</div>
+                            <span asp-validation-for="Input.ImageFile" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

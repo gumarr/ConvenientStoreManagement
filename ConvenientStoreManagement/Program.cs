@@ -1,5 +1,8 @@
 using ConvenientStoreManagement.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ConvenientStoreManagement.Services.Interfaces;
+using ConvenientStoreManagement.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +11,20 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<StoreDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Authentication/Login";
+        options.LogoutPath = "/Authentication/Logout";
+        options.AccessDeniedPath = "/Authentication/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    });
 
 var app = builder.Build();
 
@@ -24,6 +41,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
