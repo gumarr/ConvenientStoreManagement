@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -25,22 +25,47 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Management
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" asp-area="" asp-page="/Categories/Index">Categories</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-page="/Products/Index">Products</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-page="/Customers/Index">Customers</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-page="/Sales/Index">Sales</a></li>
-                            </ul>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/Dashboard/Index">Dashboard</a>
+                                </li>
+                            }
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Management
+                                </a>
+                                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item py-2" asp-area="" asp-page="/Products/Index">Products</a></li>
+                                    <li><a class="dropdown-item py-2" asp-area="" asp-page="/Orders/Index">Orders</a></li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li><a class="dropdown-item py-2" asp-area="" asp-page="/Users/Index">Users</a></li>
+                                    }
+                                </ul>
+                            </li>
+                        }
                     </ul>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item me-3">
+                                <span class="text-dark fw-medium">Hello, @User.Identity.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <form class="form-inline" asp-area="" asp-page="/Authentication/Logout" method="post">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" asp-area="" asp-page="/Authentication/Login">Login</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -48,7 +73,16 @@
     </header>
 
     <main role="main">
-        @RenderBody()
+        @if (ViewData["IsFullWidth"] != null && (bool)ViewData["IsFullWidth"])
+        {
+            @RenderBody()
+        }
+        else
+        {
+            <div class="container-custom py-4">
+                @RenderBody()
+            </div>
+        }
     </main>
 
     <footer class="footer-clean bg-light border-top mt-5">

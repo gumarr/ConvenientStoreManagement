@@ -1,0 +1,111 @@
+@page
+@model ConvenientStoreManagement.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard Overview</h2>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Total Revenue Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card bg-primary text-white shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 mb-1">Total Revenue</h6>
+                        <h3 class="mb-0 fw-bold">@Model.Stats.TotalRevenue.ToString("C0")</h3>
+                    </div>
+                    <div class="bg-white bg-opacity-25 p-3 rounded-circle">
+                        <i class="fs-4">💰</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today Revenue Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card bg-success text-white shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 mb-1">Today's Revenue</h6>
+                        <h3 class="mb-0 fw-bold">@Model.Stats.TodayRevenue.ToString("C0")</h3>
+                    </div>
+                    <div class="bg-white bg-opacity-25 p-3 rounded-circle">
+                        <i class="fs-4">📈</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Orders Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card bg-warning text-dark shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark-50 mb-1">Valid Orders</h6>
+                        <h3 class="mb-0 fw-bold">@Model.Stats.TotalOrders</h3>
+                    </div>
+                    <div class="bg-dark bg-opacity-10 p-3 rounded-circle">
+                        <i class="fs-4">🛒</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Products Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card bg-info text-white shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 mb-1">Total Products</h6>
+                        <h3 class="mb-0 fw-bold">@Model.Stats.TotalProducts</h3>
+                    </div>
+                    <div class="bg-white bg-opacity-25 p-3 rounded-circle">
+                        <i class="fs-4">📦</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white pt-4 pb-3">
+                <h5 class="mb-0">Revenue (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                @foreach (var day in Model.Stats.WeeklyRevenue.Keys)
+                                {
+                                    <th>@day</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                @foreach (var amount in Model.Stats.WeeklyRevenue.Values)
+                                {
+                                    <td class="fw-medium text-success">@amount.ToString("C0")</td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
