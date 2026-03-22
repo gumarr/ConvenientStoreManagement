@@ -24,7 +24,7 @@ namespace ConvenientStoreManagement.Pages.Users
         {
             var result = await _userService.GetUsersAsync(null, null, 1, 100);
             var item = result.FirstOrDefault(u => u.UserId == id);
-            
+
             if (item == null)
             {
                 return NotFound();
@@ -46,7 +46,7 @@ namespace ConvenientStoreManagement.Pages.Users
             }
 
             var result = await _userService.DeleteUserAsync(id.Value);
-            
+
             if (result)
             {
                 TempData["SuccessMessage"] = "User deleted successfully.";
@@ -55,7 +55,7 @@ namespace ConvenientStoreManagement.Pages.Users
             {
                 TempData["ErrorMessage"] = "Failed to delete user. They might have existing orders.";
             }
-            
+
             return RedirectToPage("./Index");
         }
     }

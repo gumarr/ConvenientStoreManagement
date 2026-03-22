@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ConvenientStoreManagement.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
@@ -51,13 +52,32 @@
                     <ul class="navbar-nav ms-auto align-items-center">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item me-3">
-                                <span class="text-dark fw-medium">Hello, @User.Identity.Name!</span>
-                            </li>
-                            <li class="nav-item">
-                                <form class="form-inline" asp-area="" asp-page="/Authentication/Logout" method="post">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Logout</button>
-                                </form>
+                            <!-- Avatar dropdown thay cho "Hello, username" -->
+                            <li class="nav-item dropdown me-1">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark"
+                                   href="#" id="userDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="navbar-avatar">
+                                        @User.Identity.Name!.Substring(0, 1).ToUpper()
+                                    </span>
+                                    <span class="fw-medium d-none d-md-inline">@User.Identity.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2"
+                                           asp-page="/Profile/Index">
+                                            👤 My Profile
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-1" /></li>
+                                    <li>
+                                        <form asp-page="/Authentication/Logout" method="post" class="d-inline w-100">
+                                            <button type="submit" class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger">
+                                                🚪 Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         }
                         else
@@ -73,7 +93,7 @@
     </header>
 
     <main role="main">
-        @if (ViewData["IsFullWidth"] != null && (bool)ViewData["IsFullWidth"])
+        @if (ViewData["IsFullWidth"] != null && ViewData["IsFullWidth"] is bool isFullWidth && isFullWidth)
         {
             @RenderBody()
         }
