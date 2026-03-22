@@ -1,5 +1,5 @@
+using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvenientStoreManagement.Models
 {
@@ -9,32 +9,18 @@ namespace ConvenientStoreManagement.Models
         public int SaleId { get; set; }
 
         [Required]
-        public int CustomerId { get; set; }
+        [StringLength(200)]
+        public string Title { get; set; }
 
-        public DateTime SaleDate { get; set; } = DateTime.Now;
+        [Required]
+        public int DiscountPercent { get; set; }
 
-        [Column(TypeName = "decimal(12, 2)")]
-        public decimal TotalAmount { get; set; }
+        public DateTime StartDate { get; set; }
 
-        [Column(TypeName = "decimal(12, 2)")]
-        public decimal PaidAmount { get; set; }
+        public DateTime EndDate { get; set; }
 
-        [Column(TypeName = "decimal(12, 2)")]
-        public decimal DiscountAmount { get; set; }
-
+        [Required]
         [StringLength(50)]
-        public string PaymentMethod { get; set; } // Cash, Card, Transfer, etc.
-
-        [StringLength(500)]
-        public string Notes { get; set; }
-
-        public bool IsCompleted { get; set; } = true;
-
-        // Foreign key
-        [ForeignKey(nameof(CustomerId))]
-        public virtual Customer Customer { get; set; }
-
-        // Navigation property
-        public virtual ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
+        public string Status { get; set; }
     }
 }

@@ -10,22 +10,31 @@ namespace ConvenientStoreManagement.Data
         {
         }
 
+        public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<Customer> Customers { get; set; }
         public DbSet<Sale> Sales { get; set; }
-        public DbSet<SaleItem> SaleItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure User
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasIndex(e => e.Username).IsUnique();
+
+                entity.HasMany(e => e.Orders)
+                    .WithOne(o => o.User)
+                    .HasForeignKey(o => o.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             // Configure Category
             modelBuilder.Entity<Category>(entity =>
             {
-                entity.HasKey(e => e.CategoryId);
-                entity.Property(e => e.CategoryName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
                 entity.HasMany(e => e.Products)
                     .WithOne(p => p.Category)
                     .HasForeignKey(p => p.CategoryId)
@@ -35,49 +44,19 @@ namespace ConvenientStoreManagement.Data
             // Configure Product
             modelBuilder.Entity<Product>(entity =>
             {
-                entity.HasKey(e => e.ProductId);
-                entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Price).HasPrecision(10, 2);
-                entity.Property(e => e.CostPrice).HasPrecision(10, 2);
-                entity.HasMany(e => e.SaleItems)
-                    .WithOne(si => si.Product)
-                    .HasForeignKey(si => si.ProductId)
+                entity.HasMany(e => e.OrderDetails)
+                    .WithOne(od => od.Product)
+                    .HasForeignKey(od => od.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configure Customer
-            modelBuilder.Entity<Customer>(entity =>
+            // Configure Order
+            modelBuilder.Entity<Order>(entity =>
             {
-                entity.HasKey(e => e.CustomerId);
-                entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(150);
-                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-                entity.Property(e => e.Email).HasMaxLength(100);
-                entity.HasMany(e => e.Sales)
-                    .WithOne(s => s.Customer)
-                    .HasForeignKey(s => s.CustomerId)
+                entity.HasMany(e => e.OrderDetails)
+                    .WithOne(od => od.Order)
+                    .HasForeignKey(od => od.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure Sale
-            modelBuilder.Entity<Sale>(entity =>
-            {
-                entity.HasKey(e => e.SaleId);
-                entity.Property(e => e.TotalAmount).HasPrecision(12, 2);
-                entity.Property(e => e.PaidAmount).HasPrecision(12, 2);
-                entity.Property(e => e.DiscountAmount).HasPrecision(12, 2);
-                entity.HasMany(e => e.SaleItems)
-                    .WithOne(si => si.Sale)
-                    .HasForeignKey(si => si.SaleId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure SaleItem
-            modelBuilder.Entity<SaleItem>(entity =>
-            {
-                entity.HasKey(e => e.SaleItemId);
-                entity.Property(e => e.UnitPrice).HasPrecision(10, 2);
-                entity.Property(e => e.Discount).HasPrecision(10, 2);
-                entity.Property(e => e.LineTotal).HasPrecision(12, 2);
             });
         }
     }

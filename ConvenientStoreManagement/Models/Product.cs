@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,35 +11,30 @@ namespace ConvenientStoreManagement.Models
 
         [Required]
         [StringLength(200)]
-        public string ProductName { get; set; }
-
-        [StringLength(500)]
-        public string Description { get; set; }
+        public string Name { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(10, 2)")]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
 
         [Required]
-        public int Quantity { get; set; }
+        public int Stock { get; set; }
 
         [Required]
         public int CategoryId { get; set; }
 
-        [Column(TypeName = "decimal(10, 2)")]
-        public decimal CostPrice { get; set; }
+        [StringLength(500)]
+        public string ImageUrl { get; set; }
 
-        public bool IsActive { get; set; } = true;
-
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-
-        public DateTime? UpdatedDate { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Status { get; set; } = "Active"; // Active / Inactive
 
         // Foreign key
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
 
         // Navigation property
-        public virtual ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }
 }
