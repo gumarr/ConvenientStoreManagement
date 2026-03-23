@@ -1,15 +1,11 @@
-﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
-
+﻿/* ── Original styles ─────────────────────────────────────────────────── */
 a.navbar-brand {
   white-space: normal;
   text-align: center;
   word-break: break-all;
 }
 
-a {
-  color: #0077cc;
-}
+a { color: #0077cc; }
 
 .btn-primary {
   color: #fff;
@@ -23,26 +19,40 @@ a {
   border-color: #1861ac;
 }
 
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
-}
+.border-top  { border-top:    1px solid #e5e5e5; }
+.border-bottom { border-bottom: 1px solid #e5e5e5; }
+.box-shadow  { box-shadow: 0 .25rem .75rem rgba(0,0,0,.05); }
 
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-}
-
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
-}
+button.accept-policy { font-size: 1rem; line-height: inherit; }
 
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+  position: absolute; bottom: 0; width: 100%;
+  white-space: nowrap; line-height: 60px;
+}
+
+/* ── Navbar avatar ────────────────────────────────────────────────────── */
+.navbar-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  font-size: .8rem; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(37,99,235,.35);
+  transition: transform .2s;
+}
+.navbar-avatar:hover { transform: scale(1.08); }
+
+/* ── Dropdown polish ──────────────────────────────────────────────────── */
+.dropdown-menu {
+  border-radius: 12px !important;
+  padding: .4rem !important;
+  min-width: 180px;
+}
+.dropdown-item {
+  border-radius: 8px;
+  font-size: .88rem;
+  font-weight: 500;
+  transition: background .15s;
 }

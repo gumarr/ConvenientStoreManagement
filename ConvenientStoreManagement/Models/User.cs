@@ -14,13 +14,24 @@ namespace ConvenientStoreManagement.Models
         [StringLength(100)]
         public string Username { get; set; }
 
-        [Required]
+        /// <summary>
+        /// Nullable: user đăng ký bằng Google không có password.
+        /// Nếu null → chỉ có thể login bằng Google.
+        /// </summary>
         [StringLength(256)]
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
         [Required]
         [StringLength(150)]
         public string FullName { get; set; }
+
+        /// <summary>Email từ Google hoặc do user cung cấp.</summary>
+        [StringLength(256)]
+        public string? Email { get; set; }
+
+        /// <summary>Google Subject ID — dùng để match tài khoản Google.</summary>
+        [StringLength(256)]
+        public string? GoogleId { get; set; }
 
         [Required]
         [StringLength(50)]

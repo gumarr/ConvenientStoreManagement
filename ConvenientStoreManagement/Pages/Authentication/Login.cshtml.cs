@@ -33,12 +33,14 @@ namespace ConvenientStoreManagement.Pages.Authentication
             public string Password { get; set; } = string.Empty;
         }
 
-        public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
+        public async Task<IActionResult> OnGetAsync(string? returnUrl = null, bool cancelled = false)
         {
             if (User.Identity?.IsAuthenticated == true)
-            {
                 return RedirectToPage("/Index");
-            }
+
+            // User bấm Cancel ở Google consent screen
+            if (cancelled)
+                TempData["ErrorMessage"] = "Google sign-in was cancelled. Please try again.";
 
             ReturnUrl = returnUrl;
             return Page();
@@ -48,54 +50,56 @@ namespace ConvenientStoreManagement.Pages.Authentication
         {
             ReturnUrl = returnUrl;
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return Page();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == Input.Username);
+
+            if (user == null)
             {
-                // In a real application, passwords should be hashed and verified using a password hasher.
-                // For this example based on requirements, we do a direct comparison or simple verification.
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Username == Input.Username && u.Password == Input.Password);
-
-                if (user != null)
-                {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim("FullName", user.FullName),
-                        new Claim(ClaimTypes.Role, user.Role)
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(
-                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
-                    };
-
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme, 
-                        new ClaimsPrincipal(claimsIdentity), 
-                        authProperties);
-
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    {
-                        return Redirect(returnUrl);
-                    }
-                    else
-                    {
-                        return RedirectToPage("/Index");
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                }
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
-            // If we got this far, something failed, redisplay form
-            return Page();
+            // Tài khoản Google (Password = null) → không cho login bằng form
+            if (user.Password == null)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "This account uses Google Sign-In. Please use the \"Continue with Google\" button.");
+                return Page();
+            }
+
+            if (user.Password != Input.Password)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name,           user.Username),
+                new Claim("FullName",                user.FullName),
+                new Claim(ClaimTypes.Role,           user.Role)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProps = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
+                authProps);
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToPage("/Index");
         }
     }
 }
