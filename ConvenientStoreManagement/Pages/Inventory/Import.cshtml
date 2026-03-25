@@ -1,0 +1,238 @@
+@page
+@model ConvenientStoreManagement.Pages.Inventory.ImportModel
+@{
+    ViewData["Title"] = "Import Inventory";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold">📦 Nhập kho sản phẩm</h2>
+        <p class="text-muted">Nhập sản phẩm đã có hoặc thêm mới vào kho. Hệ thống tự động tính giá trung bình và cập nhật giá bán.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Thành công!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form method="post" id="importForm">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle" id="itemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="min-width: 200px;">Sản phẩm (Product)</th>
+                            <th style="min-width: 150px;">Tên (New Product)</th>
+                            <th style="min-width: 150px;">Danh mục (Category)</th>
+                            <th style="min-width: 100px;">Đơn vị (Unit)</th>
+                            <th style="min-width: 120px;">Số lượng (Qty)</th>
+                            <th style="min-width: 150px;">Giá nhập (Import Price)</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                        @if (Model.ImportRequest.Items != null && Model.ImportRequest.Items.Count > 0)
+                        {
+                            for (int i = 0; i < Model.ImportRequest.Items.Count; i++)
+                            {
+                                var isExisting = Model.ImportRequest.Items[i].ProductId.HasValue;
+                                <tr>
+                                    <td>
+                                        <select class="form-select product-select" asp-for="ImportRequest.Items[i].ProductId">
+                                            @foreach (var p in Model.Products)
+                                            {
+                                                <option value="@p.Value">@p.Text</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="ImportRequest.Items[@i].Name" class="form-control new-product-field @(isExisting ? "bg-light" : "")" placeholder="Name" value="@Model.ImportRequest.Items[i].Name" @(isExisting ? "disabled" : "") />
+                                    </td>
+                                    <td>
+                                        <select class="form-select new-product-field @(isExisting ? "bg-light" : "")" asp-for="ImportRequest.Items[i].CategoryId" disabled="@(isExisting ? "disabled" : null)">
+                                            <option value="">-- Select Category --</option>
+                                            @foreach (var c in Model.Categories)
+                                            {
+                                                <option value="@c.Value">@c.Text</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="ImportRequest.Items[@i].Unit" class="form-control new-product-field @(isExisting ? "bg-light" : "")" placeholder="Unit" value="@Model.ImportRequest.Items[i].Unit" @(isExisting ? "disabled" : "") />
+                                    </td>
+                                    <td>
+                                        <input type="number" name="ImportRequest.Items[@i].Quantity" class="form-control quantity-input" required min="1" value="@(Model.ImportRequest.Items[i].Quantity > 0 ? Model.ImportRequest.Items[i].Quantity : 1)" />
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" name="ImportRequest.Items[@i].ImportPrice" class="form-control price-input" required min="0.01" value="@(Model.ImportRequest.Items[i].ImportPrice > 0 ? Model.ImportRequest.Items[i].ImportPrice : "")" />
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">❌</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-primary" id="addRowBtn">
+                    ➕ Thêm dòng (Add Row)
+                </button>
+                <button type="submit" class="btn btn-success px-4" id="submitBtn">
+                    💾 Lưu phiếu nhập (Save)
+                </button>
+            </div>
+            
+            <input type="hidden" name="ReloadIndex" id="reloadIndex" value="" />
+            <button type="submit" asp-page-handler="ReloadRow" id="reloadBtn" class="d-none">Reload</button>
+        </form>
+    </div>
+</div>
+
+<!-- Template for a row (hidden) -->
+<template id="rowTemplate">
+    <tr>
+        <td>
+            <select name="ImportRequest.Items[{0}].ProductId" class="form-select product-select">
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.Value">@p.Text</option>
+                }
+            </select>
+        </td>
+        <td>
+            <input type="text" name="ImportRequest.Items[{0}].Name" class="form-control new-product-field" placeholder="Name" />
+        </td>
+        <td>
+            <select name="ImportRequest.Items[{0}].CategoryId" class="form-select new-product-field">
+                <option value="">-- Select Category --</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Value">@c.Text</option>
+                }
+            </select>
+        </td>
+        <td>
+            <input type="text" name="ImportRequest.Items[{0}].Unit" class="form-control new-product-field" placeholder="Unit" />
+        </td>
+        <td>
+            <input type="number" name="ImportRequest.Items[{0}].Quantity" class="form-control quantity-input" required min="1" value="1" />
+        </td>
+        <td>
+            <input type="number" step="0.01" name="ImportRequest.Items[{0}].ImportPrice" class="form-control price-input" required min="0.01" placeholder="0.00" />
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">❌</button>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let rowCount = document.querySelectorAll('#itemsBody tr').length;
+            const tbody = document.getElementById('itemsBody');
+            const addRowBtn = document.getElementById('addRowBtn');
+            const template = document.getElementById('rowTemplate').innerHTML;
+
+            function attachEventsToRow(row) {
+                const productSelect = row.querySelector('.product-select');
+                const newFields = row.querySelectorAll('.new-product-field');
+                
+                // Toggle fields based on selection
+                const toggleFields = (e) => {
+                    const isNew = !productSelect.value;
+                    
+                    if (!isNew) {
+                        // Check duplicate
+                        const allSelects = document.querySelectorAll('.product-select');
+                        let count = 0;
+                        allSelects.forEach(s => {
+                            if (s.value === productSelect.value) count++;
+                        });
+                        if (count > 1) {
+                            alert("This product has already been added in another row.");
+                            productSelect.value = ""; // Reset to new product
+                            toggleFields(); // Retry
+                            return;
+                        }
+
+                        // Prevent reloading if triggered by initialization
+                        if (e && e.type === 'change') {
+                            const index = Array.from(tbody.children).indexOf(row);
+                            document.getElementById('reloadIndex').value = index;
+                            document.getElementById('reloadBtn').click();
+                        }
+                        
+                        newFields.forEach(f => {
+                            f.disabled = true;
+                            f.classList.add('bg-light');
+                        });
+                    } else {
+                        newFields.forEach(f => {
+                            f.disabled = false;
+                            f.classList.remove('bg-light');
+                            if (e && e.type === 'change') f.value = ''; // clear only if user changed
+                        });
+                    }
+                };
+
+                productSelect.addEventListener('change', toggleFields);
+            }
+
+            function addRow() {
+                const newRowHtml = template.replace(/\{0\}/g, rowCount);
+                tbody.insertAdjacentHTML('beforeend', newRowHtml);
+                
+                const newRow = tbody.lastElementChild;
+                attachEventsToRow(newRow);
+                
+                rowCount++;
+            }
+
+            // Remove row (Delegate event)
+            tbody.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-row')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+                    reindexRows();
+                }
+            });
+
+            function reindexRows() {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const inputs = row.querySelectorAll('[name]');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        const newName = name.replace(/Items\[\d+\]/, `Items[${index}]`);
+                        input.setAttribute('name', newName);
+                    });
+                });
+                rowCount = rows.length;
+            }
+
+            // Attach events to existing server-rendered rows
+            document.querySelectorAll('#itemsBody tr').forEach(row => {
+                attachEventsToRow(row);
+            });
+
+            // Add first row if empty
+            if (rowCount === 0) {
+                addRow();
+            }
+
+            addRowBtn.addEventListener('click', addRow);
+        });
+    </script>
+}

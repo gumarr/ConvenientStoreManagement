@@ -22,6 +22,10 @@ namespace ConvenientStoreManagement.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal ImportPrice { get; set; }
 
+        [Required]
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal OriginalImportPrice { get; set; }
+
         public DateTime? ExpiryDate { get; set; }
 
         [ForeignKey(nameof(ReceiptId))]
