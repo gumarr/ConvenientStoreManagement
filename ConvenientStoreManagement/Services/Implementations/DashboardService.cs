@@ -20,6 +20,7 @@ namespace ConvenientStoreManagement.Services.Implementations
 
         public async Task<DashboardViewModel> GetDashboardStatsAsync()
         {
+            /*
             var today = DateTime.Today;
 
             var totalRevenue = await _context.Orders
@@ -60,6 +61,8 @@ namespace ConvenientStoreManagement.Services.Implementations
                 TotalUsers = totalUsers,
                 WeeklyRevenue = weeklyRevenue
             };
+            */
+            return new DashboardViewModel();
         }
     }
 }

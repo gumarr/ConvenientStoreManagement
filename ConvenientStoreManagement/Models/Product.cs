@@ -14,27 +14,27 @@ namespace ConvenientStoreManagement.Models
         public string Name { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18, 2)")]
-        public decimal Price { get; set; }
+        [StringLength(50)]
+        public string Unit { get; set; }
 
         [Required]
         public int Stock { get; set; }
 
         [Required]
-        public int CategoryId { get; set; }
+        public bool Status { get; set; }
 
         [StringLength(500)]
         public string ImageUrl { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public string Status { get; set; } = "Active"; // Active / Inactive
+        public int CategoryId { get; set; }
 
-        // Foreign key
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
 
-        // Navigation property
+        public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
+        public virtual ICollection<Promotion> Promotions { get; set; } = new List<Promotion>();
+        public virtual ICollection<InventoryReceiptDetail> InventoryReceiptDetails { get; set; } = new List<InventoryReceiptDetail>();
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }
 }
