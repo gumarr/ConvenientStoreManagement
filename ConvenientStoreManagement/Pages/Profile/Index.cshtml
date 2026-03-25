@@ -1,0 +1,284 @@
+@page
+@model ConvenientStoreManagement.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["IsFullWidth"] = true;
+    var activeTab = (TempData["ActiveTab"] as string) ?? "info";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+}
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<div class="profile-hero">
+    <div class="container profile-hero-content">
+        <div class="d-flex align-items-center gap-4">
+            <div class="avatar-ring">
+                @Model.CurrentUser.FullName.Substring(0, 1).ToUpper()
+            </div>
+            <div>
+                <div class="profile-name">@Model.CurrentUser.FullName</div>
+                <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="profile-role @(Model.CurrentUser.Role == "Admin" ? "admin" : "")">
+                        @(Model.CurrentUser.Role == "Admin" ? "👑" : "🛒") @Model.CurrentUser.Role
+                    </span>
+                    @if (Model.IsGoogleAccount)
+                    {
+                        <span class="google-badge">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="13" height="13" />
+                            Google Account
+                        </span>
+                    }
+                </div>
+                <div style="color:rgba(255,255,255,.6); font-size:.82rem; margin-top:.4rem;">
+                    @Model.CurrentUser.Username
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Body ──────────────────────────────────────────────────────────────── -->
+<div class="profile-body">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- ── Main tabs ───────────────────────────────────────────── -->
+            <div class="col-lg-8">
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert-success-custom mb-3">
+                        ✅ @TempData["SuccessMessage"]
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert-danger-custom mb-3">
+                        ⚠️ @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                <!-- Tab nav -->
+                <div class="profile-tabs">
+                    <button class="profile-tab @(activeTab == "info" ? "active" : "")" onclick="switchTab('info')"
+                            type="button">
+                        <span class="tab-icon">👤</span>
+                        <span>Profile Info</span>
+                    </button>
+                    <button class="profile-tab @(activeTab == "password" ? "active" : "")"
+                            onclick="switchTab('password')" type="button">
+                        <span class="tab-icon">🔐</span>
+                        <span>Password</span>
+                    </button>
+                </div>
+
+                <!-- Tab content -->
+                <div class="profile-card">
+
+                    <!-- ── Tab 1: Edit Info ──────────────────────────── -->
+                    <div id="tab-info" class="tab-pane @(activeTab == "info" ? "active" : "")">
+                        <div class="form-section-title">Personal Information</div>
+                        <form method="post" asp-page-handler="EditInfo">
+                            <div asp-validation-summary="ModelOnly" class="alert-danger-custom mb-3"></div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input class="form-control input-readonly" value="@Model.CurrentUser.Username"
+                                       disabled />
+                                <div class="field-hint">🔒 Username cannot be changed.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="EditInfo.FullName" class="form-label"></label>
+                                <input asp-for="EditInfo.FullName" class="form-control" placeholder="Your full name" />
+                                <span asp-validation-for="EditInfo.FullName" class="text-danger"
+                                      style="font-size:.8rem;"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="EditInfo.Email" class="form-label"></label>
+                                <input asp-for="EditInfo.Email" class="form-control input-readonly" placeholder="Null"
+                                       type="email" disabled />
+                                @if (Model.IsGoogleAccount)
+                                {
+                                    <div class="field-hint">📧 This is your Google email.</div>
+                                }
+                                else
+                                {
+                                    <div class="field-hint">📧 This is your personal email.</div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <input class="form-control input-readonly" value="@Model.CurrentUser.Role" disabled />
+                                <div class="field-hint">🔒 Role is managed by Admin.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Member Since</label>
+                                <input class="form-control input-readonly"
+                                       value="@Model.CurrentUser.CreatedAt.ToString("MMMM dd, yyyy")" disabled />
+                            </div>
+
+                            <button type="submit" class="btn-save mt-1">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- ── Tab 2: Change Password ────────────────────── -->
+                    <div id="tab-password" class="tab-pane @(activeTab == "password" ? "active" : "")">
+                        <div class="form-section-title">
+                            @(Model.IsGoogleAccount ? "Set a Password" : "Change Password")
+                        </div>
+
+                        @if (Model.IsGoogleAccount)
+                        {
+                            <div class="alert-success-custom mb-4"
+                                 style="background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8;">
+                                ℹ️ Your account uses Google Sign-In. You can set a password to also log in with username &
+                                password.
+                            </div>
+                        }
+
+                        <form method="post" asp-page-handler="ChangePassword">
+                            <div asp-validation-summary="ModelOnly" class="alert-danger-custom mb-3"></div>
+
+                            @if (!Model.IsGoogleAccount)
+                            {
+                                <div class="mb-3">
+                                    <label asp-for="ChangePassword.CurrentPassword" class="form-label"></label>
+                                    <input asp-for="ChangePassword.CurrentPassword" class="form-control" type="password"
+                                           placeholder="Enter current password" />
+                                    <span asp-validation-for="ChangePassword.CurrentPassword" class="text-danger"
+                                          style="font-size:.8rem;"></span>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label asp-for="ChangePassword.NewPassword" class="form-label"></label>
+                                <input asp-for="ChangePassword.NewPassword" class="form-control" type="password"
+                                       placeholder="At least 6 characters" id="newPasswordInput"
+                                       oninput="updateStrength(this.value)" />
+                                <div class="strength-bar mt-2">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="field-hint" id="strengthLabel" style="margin-top:.3rem;"></div>
+                                <span asp-validation-for="ChangePassword.NewPassword" class="text-danger"
+                                      style="font-size:.8rem;"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="ChangePassword.ConfirmNewPassword" class="form-label"></label>
+                                <input asp-for="ChangePassword.ConfirmNewPassword" class="form-control" type="password"
+                                       placeholder="Repeat new password" />
+                                <span asp-validation-for="ChangePassword.ConfirmNewPassword" class="text-danger"
+                                      style="font-size:.8rem;"></span>
+                            </div>
+
+                            <button type="submit" class="btn-save">
+                                @(Model.IsGoogleAccount ? "Set Password" : "Update Password")
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── Sidebar ──────────────────────────────────────────────── -->
+            <div class="col-lg-4">
+                <div class="stat-card">
+                    <div class="stat-label">Account Status</div>
+                    <div class="stat-value" style="font-size:1.1rem; color: #059669;">● Active</div>
+                    <div class="stat-sub">Since @Model.CurrentUser.CreatedAt.ToString("MMM yyyy")</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Login Method</div>
+                    <div class="stat-value" style="font-size:1rem;">
+                        @if (Model.IsGoogleAccount)
+                        {
+                            <span>🔗 Google SSO</span>
+                        }
+                        else
+                        {
+                            <span>🔑 Password</span>
+                        }
+                        @if (Model.CurrentUser.GoogleId != null && Model.CurrentUser.Password != null)
+                        {
+                            <span>🔗 Linked: Google + Password</span>
+                        }
+                    </div>
+                    <div class="stat-sub">
+                        @if (Model.CurrentUser.GoogleId != null && Model.CurrentUser.Password != null)
+                        {
+                            <span>Google + Password</span>
+                        }
+                        else if (Model.IsGoogleAccount)
+                        {
+
+                            <span>Google only</span>
+                        }
+                        else
+                        {
+
+                            <span>Password only</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Access Level</div>
+                    <div class="stat-value" style="font-size:1rem;">
+                        @(Model.CurrentUser.Role == "Admin" ? "👑 Full Access" : "🛒 Staff Access")
+                    </div>
+                    <div class="stat-sub">
+                        @(Model.CurrentUser.Role == "Admin"
+                            ? "Can manage users, products, orders"
+                            : "Can manage products & orders")
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    // ── Tab switching ───────────────────────────────────────────────
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+    }
+
+    // ── Password strength ───────────────────────────────────────────
+    function updateStrength(val) {
+        const fill = document.getElementById('strengthFill');
+        const label = document.getElementById('strengthLabel');
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        const levels = [
+            { pct: '0%', color: 'transparent', text: '' },
+            { pct: '25%', color: '#ef4444', text: '⚡ Weak' },
+            { pct: '50%', color: '#f97316', text: '🔶 Fair' },
+            { pct: '75%', color: '#eab308', text: '🔷 Good' },
+            { pct: '100%', color: '#22c55e', text: '✅ Strong' },
+        ];
+        const lvl = val.length === 0 ? 0 : Math.min(score, 4);
+        fill.style.width = levels[lvl].pct;
+        fill.style.background = levels[lvl].color;
+        label.textContent = levels[lvl].text;
+        label.style.color = levels[lvl].color;
+    }
+    </script>
+}

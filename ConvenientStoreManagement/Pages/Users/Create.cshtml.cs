@@ -2,7 +2,6 @@ using ConvenientStoreManagement.Services.Interfaces;
 using ConvenientStoreManagement.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-
 using Microsoft.AspNetCore.Authorization;
 
 namespace ConvenientStoreManagement.Pages.Users
@@ -27,9 +26,7 @@ namespace ConvenientStoreManagement.Pages.Users
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
-            {
                 return Page();
-            }
 
             if (await _userService.UsernameExistsAsync(Input.Username))
             {
