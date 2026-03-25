@@ -14,6 +14,9 @@ builder.Services.AddDbContext<StoreDbContext>(options =>
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 builder.Services.AddAuthentication(options =>
 {
