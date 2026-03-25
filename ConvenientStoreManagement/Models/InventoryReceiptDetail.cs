@@ -1,15 +1,16 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvenientStoreManagement.Models
 {
-    public class OrderDetail
+    public class InventoryReceiptDetail
     {
         [Key]
-        public int OrderDetailId { get; set; }
+        public int ReceiptDetailId { get; set; }
 
         [Required]
-        public int OrderId { get; set; }
+        public int ReceiptId { get; set; }
 
         [Required]
         public int ProductId { get; set; }
@@ -19,13 +20,12 @@ namespace ConvenientStoreManagement.Models
 
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal UnitPrice { get; set; }
+        public decimal ImportPrice { get; set; }
 
-        [Column(TypeName = "decimal(18, 2)")]
-        public decimal DiscountApplied { get; set; } = 0;
+        public DateTime? ExpiryDate { get; set; }
 
-        [ForeignKey(nameof(OrderId))]
-        public virtual Order Order { get; set; }
+        [ForeignKey(nameof(ReceiptId))]
+        public virtual InventoryReceipt Receipt { get; set; }
 
         [ForeignKey(nameof(ProductId))]
         public virtual Product Product { get; set; }

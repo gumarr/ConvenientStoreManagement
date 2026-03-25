@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConvenientStoreManagement.Migrations
 {
     [DbContext(typeof(StoreDbContext))]
-    [Migration("20260322053109_UpdateConvenienceStoreSchema")]
-    partial class UpdateConvenienceStoreSchema
+    [Migration("20260325074902_InitNewSchema")]
+    partial class InitNewSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,6 +48,62 @@ namespace ConvenientStoreManagement.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("ConvenientStoreManagement.Models.InventoryReceipt", b =>
+                {
+                    b.Property<int>("ReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReceiptId"));
+
+                    b.Property<DateTime>("ImportDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReceiptId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("InventoryReceipts");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.InventoryReceiptDetail", b =>
+                {
+                    b.Property<int>("ReceiptDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReceiptDetailId"));
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("ImportPrice")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceiptId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReceiptDetailId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.ToTable("InventoryReceiptDetails");
+                });
+
             modelBuilder.Entity("ConvenientStoreManagement.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -56,13 +112,8 @@ namespace ConvenientStoreManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18, 2)");
@@ -85,8 +136,8 @@ namespace ConvenientStoreManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderDetailId"));
 
-                    b.Property<int>("DiscountPercent")
-                        .HasColumnType("int");
+                    b.Property<decimal>("DiscountApplied")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
@@ -130,16 +181,16 @@ namespace ConvenientStoreManagement.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("ProductId");
 
@@ -148,36 +199,69 @@ namespace ConvenientStoreManagement.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("ConvenientStoreManagement.Models.Sale", b =>
+            modelBuilder.Entity("ConvenientStoreManagement.Models.ProductPrice", b =>
                 {
-                    b.Property<int>("SaleId")
+                    b.Property<int>("PriceId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SaleId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PriceId"));
 
-                    b.Property<int>("DiscountPercent")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.HasKey("PriceId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductPrices");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.Promotion", b =>
+                {
+                    b.Property<int>("PromotionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionId"));
+
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.HasKey("SaleId");
+                    b.HasKey("PromotionId");
 
-                    b.ToTable("Sales");
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("ConvenientStoreManagement.Models.User", b =>
@@ -191,13 +275,20 @@ namespace ConvenientStoreManagement.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("GoogleId")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -217,6 +308,36 @@ namespace ConvenientStoreManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.InventoryReceipt", b =>
+                {
+                    b.HasOne("ConvenientStoreManagement.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.InventoryReceiptDetail", b =>
+                {
+                    b.HasOne("ConvenientStoreManagement.Models.Product", "Product")
+                        .WithMany("InventoryReceiptDetails")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ConvenientStoreManagement.Models.InventoryReceipt", "Receipt")
+                        .WithMany("ReceiptDetails")
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Receipt");
                 });
 
             modelBuilder.Entity("ConvenientStoreManagement.Models.Order", b =>
@@ -260,9 +381,36 @@ namespace ConvenientStoreManagement.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("ConvenientStoreManagement.Models.ProductPrice", b =>
+                {
+                    b.HasOne("ConvenientStoreManagement.Models.Product", "Product")
+                        .WithMany("ProductPrices")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.Promotion", b =>
+                {
+                    b.HasOne("ConvenientStoreManagement.Models.Product", "Product")
+                        .WithMany("Promotions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ConvenientStoreManagement.Models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("ConvenientStoreManagement.Models.InventoryReceipt", b =>
+                {
+                    b.Navigation("ReceiptDetails");
                 });
 
             modelBuilder.Entity("ConvenientStoreManagement.Models.Order", b =>
@@ -272,7 +420,13 @@ namespace ConvenientStoreManagement.Migrations
 
             modelBuilder.Entity("ConvenientStoreManagement.Models.Product", b =>
                 {
+                    b.Navigation("InventoryReceiptDetails");
+
                     b.Navigation("OrderDetails");
+
+                    b.Navigation("ProductPrices");
+
+                    b.Navigation("Promotions");
                 });
 
             modelBuilder.Entity("ConvenientStoreManagement.Models.User", b =>

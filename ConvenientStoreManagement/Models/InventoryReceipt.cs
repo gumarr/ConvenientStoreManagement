@@ -5,24 +5,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvenientStoreManagement.Models
 {
-    public class Order
+    public class InventoryReceipt
     {
         [Key]
-        public int OrderId { get; set; }
+        public int ReceiptId { get; set; }
 
         [Required]
         public int UserId { get; set; }
 
         [Required]
-        public DateTime OrderDate { get; set; }
+        public DateTime ImportDate { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal TotalAmount { get; set; }
+        public decimal TotalCost { get; set; }
 
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; }
 
-        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+        public virtual ICollection<InventoryReceiptDetail> ReceiptDetails { get; set; } = new List<InventoryReceiptDetail>();
     }
 }
