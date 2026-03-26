@@ -1,0 +1,56 @@
+@page
+@model ConvenientStoreManagement.Pages.Orders.HistoryModel
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h2>Order History</h2>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>User (Staff)</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Orders != null && Model.Orders.Count > 0)
+                        {
+                            foreach (var order in Model.Orders)
+                            {
+                                <tr>
+                                    <td>#@order.OrderId</td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(order.User?.Username ?? "Unknown")</td>
+                                    <td class="fw-bold text-primary">@order.TotalAmount.ToString("N0") ₫</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <a asp-page="./Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">View Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No orders found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
