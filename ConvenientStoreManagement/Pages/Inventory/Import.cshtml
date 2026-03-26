@@ -7,11 +7,11 @@
 <div class="row mb-4">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="fw-bold">📦 Nhập kho sản phẩm</h2>
-            <p class="text-muted mb-0">Nhập sản phẩm đã có hoặc thêm mới vào kho. Hệ thống tự động tính giá trung bình và cập nhật giá bán.</p>
+            <h2 class="fw-bold">📦 Import Inventory</h2>
+            <p class="text-muted mb-0">Import existing products or add new ones. The system automatically calculates average prices and updates selling prices.</p>
         </div>
         <a asp-page="/Inventory/History" class="btn btn-outline-secondary">
-            📜 Lịch sử nhập kho
+            📜 Import History
         </a>
     </div>
 </div>
@@ -19,7 +19,7 @@
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        <strong>Thành công!</strong> @TempData["SuccessMessage"]
+        <strong>Success!</strong> @TempData["SuccessMessage"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -33,13 +33,14 @@
                 <table class="table table-bordered table-hover align-middle" id="itemsTable">
                     <thead class="table-light">
                         <tr>
-                            <th style="min-width: 200px;">Sản phẩm (Product)</th>
-                            <th style="min-width: 150px;">Tên (New Product)</th>
-                            <th style="min-width: 150px;">Danh mục (Category)</th>
-                            <th style="min-width: 100px;">Đơn vị (Unit)</th>
-                            <th style="min-width: 120px;">Số lượng (Qty)</th>
-                            <th style="min-width: 150px;">Giá nhập (Import Price)</th>
-                            <th style="min-width: 160px;">Ảnh sản phẩm (Image)</th>
+                            <th style="min-width: 200px;">Product</th>
+                            <th style="min-width: 150px;">New Product Name</th>
+                            <th style="min-width: 150px;">Category</th>
+                            <th style="min-width: 100px;">Unit</th>
+                            <th style="min-width: 110px;">Quantity</th>
+                            <th style="min-width: 140px;">Import Price</th>
+                            <th style="min-width: 130px;" title="Selling Price = Avg Import Price × Multiplier">Multiplier <span class="text-muted small">(?)</span></th>
+                            <th style="min-width: 160px;">Image</th>
                             <th style="width: 50px;"></th>
                         </tr>
                     </thead>
@@ -80,6 +81,19 @@
                                         <input type="number" step="0.01" name="ImportRequest.Items[@i].ImportPrice" class="form-control price-input" required min="0.01" value="@(Model.ImportRequest.Items[i].ImportPrice > 0 ? Model.ImportRequest.Items[i].ImportPrice : "")" />
                                     </td>
                                     <td>
+                                        @if (isExisting)
+                                        {
+                                            <input type="text" class="form-control bg-light text-muted multiplier-display" placeholder="From product" disabled title="Multiplier is fixed for existing products" />
+                                        }
+                                        else
+                                        {
+                                            <input type="number" step="0.01" name="ImportRequest.Items[@i].PriceMultiplier"
+                                                   class="form-control multiplier-input" min="0.01" max="10"
+                                                   placeholder="e.g. 1.5"
+                                                   value="@(Model.ImportRequest.Items[i].PriceMultiplier.HasValue ? Model.ImportRequest.Items[i].PriceMultiplier : "")" />
+                                        }
+                                    </td>
+                                    <td>
                                         <input type="file" name="imageFiles[@i]" accept="image/jpeg,image/png,image/webp"
                                                class="form-control image-upload new-product-field @(isExisting ? "bg-light" : "")"
                                                @(isExisting ? "disabled" : "") />
@@ -97,10 +111,10 @@
 
             <div class="d-flex justify-content-between mt-3">
                 <button type="button" class="btn btn-outline-primary" id="addRowBtn">
-                    ➕ Thêm dòng (Add Row)
+                    ➕ Add Row
                 </button>
-                <button type="button" class="btn btn-success px-4" id="submitBtn" data-bs-toggle="modal" data-bs-target="#confirmModal">
-                    💾 Lưu phiếu nhập (Save)
+                <button type="button" class="btn btn-success px-4" id="submitBtn">
+                    💾 Save Import Receipt
                 </button>
             </div>
 
@@ -110,21 +124,38 @@
     </div>
 </div>
 
-<!-- ── Confirmation Modal (Task 4) ──────────────────────────────────────── -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- ── Preview Modal ──────────────────────────────────────────────────────── -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content shadow">
-            <div class="modal-header bg-warning bg-gradient">
-                <h5 class="modal-title fw-bold" id="confirmModalLabel">⚠️ Xác nhận lưu phiếu nhập</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="previewModalLabel">🔍 Import Preview — Review Before Confirming</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                Bạn có chắc muốn lưu phiếu nhập kho này không?<br />
-                <span class="text-muted small">Thao tác này sẽ cập nhật tồn kho và giá bán của tất cả sản phẩm trong phiếu.</span>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0" id="previewTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Import Price</th>
+                                <th class="text-end">Avg Import Price <small class="fw-normal">(after import)</small></th>
+                                <th class="text-end">Multiplier</th>
+                                <th class="text-end">Selling Price <small class="fw-normal">(new)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewBody">
+                        </tbody>
+                        <tfoot id="previewFoot" class="table-light fw-bold">
+                        </tfoot>
+                    </table>
+                </div>
+                <div id="previewErrors" class="alert alert-danger mx-3 mt-3 d-none"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy (Cancel)</button>
-                <button type="button" class="btn btn-success" id="confirmSaveBtn">✅ Xác nhận lưu (Confirm)</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">✏️ Edit</button>
+                <button type="button" class="btn btn-success px-4" id="confirmSaveBtn">✅ Confirm &amp; Save</button>
             </div>
         </div>
     </div>
@@ -163,6 +194,10 @@
             <input type="number" step="0.01" name="ImportRequest.Items[{0}].ImportPrice" class="form-control price-input" required min="0.01" placeholder="0.00" />
         </td>
         <td>
+            <input type="number" step="0.01" name="ImportRequest.Items[{0}].PriceMultiplier"
+                   class="form-control multiplier-input" min="0.01" max="10" placeholder="e.g. 1.5" />
+        </td>
+        <td>
             <input type="file" name="imageFiles[{0}]" accept="image/jpeg,image/png,image/webp"
                    class="form-control image-upload new-product-field" />
             <div class="form-text text-muted small">Max 3MB · jpg/jpeg/png/webp</div>
@@ -176,24 +211,151 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        // ── Product metadata injected from server ──────────────────────────────
+        // Shape: { "productId": { stock, avgPrice, multiplier } }
+        const productMeta = @Html.Raw(Model.ProductMetaJson);
+
         document.addEventListener('DOMContentLoaded', function () {
             let rowCount = document.querySelectorAll('#itemsBody tr').length;
             const tbody = document.getElementById('itemsBody');
             const addRowBtn = document.getElementById('addRowBtn');
             const template = document.getElementById('rowTemplate').innerHTML;
 
-            // ── Confirmation modal wiring ────────────────────────────────────
+            // ── Helper: format currency ──────────────────────────────────────
+            function fmt(n) {
+                return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            // ── Preview calculation ──────────────────────────────────────────
+            function buildPreview() {
+                const rows = tbody.querySelectorAll('tr');
+                const errors = [];
+                const previewRows = [];
+                let totalCost = 0;
+
+                rows.forEach((row, idx) => {
+                    const productSelect = row.querySelector('.product-select');
+                    const qtyInput = row.querySelector('.quantity-input');
+                    const priceInput = row.querySelector('.price-input');
+                    const multiplierInput = row.querySelector('.multiplier-input');
+                    const multiplierDisplay = row.querySelector('.multiplier-display');
+
+                    const productId = productSelect ? productSelect.value : '';
+                    const qty = parseInt(qtyInput ? qtyInput.value : '0') || 0;
+                    const importPrice = parseFloat(priceInput ? priceInput.value : '0') || 0;
+
+                    // Determine product name
+                    let productName = '(New Product)';
+                    if (productSelect) {
+                        const opt = productSelect.options[productSelect.selectedIndex];
+                        productName = opt ? opt.text : '(New Product)';
+                    }
+
+                    if (qty <= 0) { errors.push(`Row ${idx + 1}: Quantity must be > 0.`); return; }
+                    if (importPrice <= 0) { errors.push(`Row ${idx + 1}: Import price must be > 0.`); return; }
+
+                    let avgPrice, multiplier, isExisting;
+
+                    if (productId) {
+                        // ── Existing product ──────────────────────────────
+                        isExisting = true;
+                        const meta = productMeta[productId];
+                        if (!meta) { errors.push(`Row ${idx + 1}: Product data not found.`); return; }
+                        const oldStock = meta.stock;
+                        const oldAvgPrice = meta.avgPrice;
+                        multiplier = meta.multiplier;
+
+                        avgPrice = (oldStock + qty) > 0
+                            ? ((oldStock * oldAvgPrice) + (qty * importPrice)) / (oldStock + qty)
+                            : importPrice;
+                    } else {
+                        // ── New product ───────────────────────────────────
+                        isExisting = false;
+                        multiplier = parseFloat(multiplierInput ? multiplierInput.value : '0') || 0;
+                        if (multiplier <= 0) { errors.push(`Row ${idx + 1}: Multiplier is required for new products.`); return; }
+                        avgPrice = importPrice;
+                    }
+
+                    const sellingPrice = avgPrice * multiplier;
+                    totalCost += qty * importPrice;
+
+                    previewRows.push({
+                        name: productName,
+                        qty,
+                        importPrice,
+                        avgPrice,
+                        multiplier,
+                        sellingPrice,
+                        isExisting
+                    });
+                });
+
+                return { errors, previewRows, totalCost };
+            }
+
+            // ── Show preview modal ───────────────────────────────────────────
+            document.getElementById('submitBtn').addEventListener('click', function () {
+                const { errors, previewRows, totalCost } = buildPreview();
+
+                const errBox = document.getElementById('previewErrors');
+                const previewBody = document.getElementById('previewBody');
+                const previewFoot = document.getElementById('previewFoot');
+
+                previewBody.innerHTML = '';
+                previewFoot.innerHTML = '';
+
+                if (errors.length > 0) {
+                    errBox.innerHTML = '<strong>Please fix these issues:</strong><ul>' +
+                        errors.map(e => `<li>${e}</li>`).join('') + '</ul>';
+                    errBox.classList.remove('d-none');
+                } else {
+                    errBox.classList.add('d-none');
+                }
+
+                if (previewRows.length === 0 && errors.length === 0) {
+                    errBox.textContent = 'No valid rows to preview.';
+                    errBox.classList.remove('d-none');
+                }
+
+                previewRows.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.name} ${r.isExisting ? '' : '<span class="badge bg-info text-dark ms-1">New</span>'}</td>
+                        <td class="text-end">${r.qty}</td>
+                        <td class="text-end">${fmt(r.importPrice)}</td>
+                        <td class="text-end fw-semibold">${fmt(r.avgPrice)}</td>
+                        <td class="text-end">${r.multiplier.toFixed(2)}×</td>
+                        <td class="text-end text-success fw-bold">${fmt(r.sellingPrice)}</td>
+                    `;
+                    previewBody.appendChild(tr);
+                });
+
+                if (previewRows.length > 0) {
+                    previewFoot.innerHTML = `
+                        <tr>
+                            <td colspan="2"></td>
+                            <td colspan="2" class="text-end">Total Import Cost:</td>
+                            <td colspan="2" class="text-end">${fmt(totalCost)}</td>
+                        </tr>
+                    `;
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                modal.show();
+            });
+
+            // ── Confirm button submits the form ──────────────────────────────
             document.getElementById('confirmSaveBtn').addEventListener('click', function () {
-                // Close modal then submit the real form
-                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+                const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
                 if (modal) modal.hide();
                 document.getElementById('importForm').submit();
             });
 
-            // ── Row event attachment ────────────────────────────────────────
+            // ── Row event attachment ─────────────────────────────────────────
             function attachEventsToRow(row) {
                 const productSelect = row.querySelector('.product-select');
                 const newFields = row.querySelectorAll('.new-product-field');
+                const multiplierInput = row.querySelector('.multiplier-input');
 
                 const toggleFields = (e) => {
                     const isNew = !productSelect.value;
@@ -220,16 +382,41 @@
                             f.disabled = true;
                             f.classList.add('bg-light');
                         });
+                        // Hide new-product multiplier; show read-only display instead
+                        if (multiplierInput) {
+                            multiplierInput.disabled = true;
+                            multiplierInput.classList.add('d-none');
+                            // Insert a placeholder display if none
+                            let disp = row.querySelector('.multiplier-display');
+                            if (!disp) {
+                                disp = document.createElement('input');
+                                disp.type = 'text';
+                                disp.className = 'form-control bg-light text-muted multiplier-display';
+                                disp.disabled = true;
+                                disp.placeholder = 'From product';
+                                disp.title = 'Multiplier is fixed for existing products';
+                                multiplierInput.parentNode.appendChild(disp);
+                            }
+                            disp.classList.remove('d-none');
+                        }
                     } else {
                         newFields.forEach(f => {
                             f.disabled = false;
                             f.classList.remove('bg-light');
                             if (e && e.type === 'change') f.value = '';
                         });
+                        if (multiplierInput) {
+                            multiplierInput.disabled = false;
+                            multiplierInput.classList.remove('d-none');
+                            const disp = row.querySelector('.multiplier-display');
+                            if (disp) disp.classList.add('d-none');
+                        }
                     }
                 };
 
                 productSelect.addEventListener('change', toggleFields);
+                // Initialise state without firing a reload
+                toggleFields(null);
             }
 
             function addRow() {
@@ -256,7 +443,6 @@
                         const newName = name.replace(/Items\[\d+\]/, `Items[${index}]`);
                         input.setAttribute('name', newName);
                     });
-                    // Re-index the file input separately (not inside ImportRequest.Items)
                     row.querySelectorAll('input[type="file"]').forEach(input => {
                         input.setAttribute('name', `imageFiles[${index}]`);
                     });
