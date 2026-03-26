@@ -7,6 +7,7 @@ using ConvenientStoreManagement.Data;
 using ConvenientStoreManagement.Services.Interfaces;
 using ConvenientStoreManagement.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -46,7 +47,7 @@ namespace ConvenientStoreManagement.Pages.Inventory
         public async Task<IActionResult> OnPostReloadRowAsync()
         {
             await LoadDropdownsAsync();
-            ModelState.Clear(); // Do not show validation errors on reload
+            ModelState.Clear();
 
             if (ImportRequest.Items != null && ReloadIndex.HasValue && ReloadIndex.Value < ImportRequest.Items.Count)
             {
@@ -81,31 +82,59 @@ namespace ConvenientStoreManagement.Pages.Inventory
                 return Page();
             }
 
-            // Custom validation for dynamic items
+            // Bind uploaded files by index from the form
+            // Files are posted with name "imageFiles[i]" – we map them back to the items
+            var files = Request.Form.Files;
+
             for (int i = 0; i < ImportRequest.Items.Count; i++)
             {
                 var item = ImportRequest.Items[i];
+
                 if (item.ProductId.HasValue && item.ProductId.Value > 0)
                 {
-                    // Existing product logic: Clear model state errors for these disabled fields
+                    // Existing product: clear model errors for disabled fields and skip image
                     ModelState.Remove($"ImportRequest.Items[{i}].Name");
                     ModelState.Remove($"ImportRequest.Items[{i}].CategoryId");
                     ModelState.Remove($"ImportRequest.Items[{i}].Unit");
+                    ModelState.Remove($"ImportRequest.Items[{i}].ImageFile");
                 }
                 else
                 {
-                    // New product logic: Enforce validation manually
+                    // New product: enforce validation
                     if (string.IsNullOrWhiteSpace(item.Name))
-                    {
                         ModelState.AddModelError($"ImportRequest.Items[{i}].Name", "Name is required for new products.");
-                    }
+
                     if (!item.CategoryId.HasValue || item.CategoryId.Value == 0)
-                    {
                         ModelState.AddModelError($"ImportRequest.Items[{i}].CategoryId", "Category is required for new products.");
-                    }
+
                     if (string.IsNullOrWhiteSpace(item.Unit))
-                    {
                         ModelState.AddModelError($"ImportRequest.Items[{i}].Unit", "Unit is required for new products.");
+
+                    // Attach uploaded image file to the item
+                    var fileKey = $"imageFiles[{i}]";
+                    var uploadedFile = files.GetFile(fileKey);
+                    if (uploadedFile != null && uploadedFile.Length > 0)
+                    {
+                        // Validate size
+                        if (uploadedFile.Length > 3 * 1024 * 1024)
+                        {
+                            ModelState.AddModelError($"ImportRequest.Items[{i}].ImageFile",
+                                "Image upload failed: file exceeds the 3 MB limit.");
+                        }
+                        else
+                        {
+                            // Validate type
+                            var allowed = new[] { "image/jpeg", "image/png", "image/webp" };
+                            if (!allowed.Contains(uploadedFile.ContentType, StringComparer.OrdinalIgnoreCase))
+                            {
+                                ModelState.AddModelError($"ImportRequest.Items[{i}].ImageFile",
+                                    "Image upload failed: only jpg, jpeg, png, and webp are allowed.");
+                            }
+                            else
+                            {
+                                item.ImageFile = uploadedFile;
+                            }
+                        }
                     }
                 }
             }
@@ -120,14 +149,19 @@ namespace ConvenientStoreManagement.Pages.Inventory
             {
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
                     return Unauthorized();
-                }
 
                 await _inventoryService.CreateReceiptAsync(userId, ImportRequest);
-                
+
                 TempData["SuccessMessage"] = "Inventory imported successfully!";
                 return RedirectToPage("/Inventory/Import");
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Image validation errors raised by the service layer
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await LoadDropdownsAsync();
+                return Page();
             }
             catch (Exception ex)
             {
@@ -145,7 +179,6 @@ namespace ConvenientStoreManagement.Pages.Inventory
                 Value = p.ProductId.ToString(),
                 Text = $"{p.Name} (Stock: {p.Stock})"
             }).ToList();
-
             Products.Insert(0, new SelectListItem { Value = "", Text = "-- New Product --" });
 
             var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();

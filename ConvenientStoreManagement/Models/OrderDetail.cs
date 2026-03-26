@@ -24,10 +24,17 @@ namespace ConvenientStoreManagement.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal DiscountApplied { get; set; } = 0;
 
+        /// <summary>
+        /// Weighted-average import cost per unit at the moment this order line was created.
+        /// Used for accurate profit calculation even after future import price changes.
+        /// </summary>
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal ImportCostSnapshot { get; set; } = 0;
+
         [ForeignKey(nameof(OrderId))]
-        public virtual Order Order { get; set; }
+        public virtual Order Order { get; set; } = null!;
 
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; }
+        public virtual Product Product { get; set; } = null!;
     }
 }

@@ -5,9 +5,14 @@
 }
 
 <div class="row mb-4">
-    <div class="col-12">
-        <h2 class="fw-bold">📦 Nhập kho sản phẩm</h2>
-        <p class="text-muted">Nhập sản phẩm đã có hoặc thêm mới vào kho. Hệ thống tự động tính giá trung bình và cập nhật giá bán.</p>
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold">📦 Nhập kho sản phẩm</h2>
+            <p class="text-muted mb-0">Nhập sản phẩm đã có hoặc thêm mới vào kho. Hệ thống tự động tính giá trung bình và cập nhật giá bán.</p>
+        </div>
+        <a asp-page="/Inventory/History" class="btn btn-outline-secondary">
+            📜 Lịch sử nhập kho
+        </a>
     </div>
 </div>
 
@@ -21,7 +26,7 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-4">
-        <form method="post" id="importForm">
+        <form method="post" id="importForm" enctype="multipart/form-data">
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
             <div class="table-responsive">
@@ -34,6 +39,7 @@
                             <th style="min-width: 100px;">Đơn vị (Unit)</th>
                             <th style="min-width: 120px;">Số lượng (Qty)</th>
                             <th style="min-width: 150px;">Giá nhập (Import Price)</th>
+                            <th style="min-width: 160px;">Ảnh sản phẩm (Image)</th>
                             <th style="width: 50px;"></th>
                         </tr>
                     </thead>
@@ -73,6 +79,12 @@
                                     <td>
                                         <input type="number" step="0.01" name="ImportRequest.Items[@i].ImportPrice" class="form-control price-input" required min="0.01" value="@(Model.ImportRequest.Items[i].ImportPrice > 0 ? Model.ImportRequest.Items[i].ImportPrice : "")" />
                                     </td>
+                                    <td>
+                                        <input type="file" name="imageFiles[@i]" accept="image/jpeg,image/png,image/webp"
+                                               class="form-control image-upload new-product-field @(isExisting ? "bg-light" : "")"
+                                               @(isExisting ? "disabled" : "") />
+                                        <div class="form-text text-muted small">Max 3MB · jpg/jpeg/png/webp</div>
+                                    </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">❌</button>
                                     </td>
@@ -87,18 +99,38 @@
                 <button type="button" class="btn btn-outline-primary" id="addRowBtn">
                     ➕ Thêm dòng (Add Row)
                 </button>
-                <button type="submit" class="btn btn-success px-4" id="submitBtn">
+                <button type="button" class="btn btn-success px-4" id="submitBtn" data-bs-toggle="modal" data-bs-target="#confirmModal">
                     💾 Lưu phiếu nhập (Save)
                 </button>
             </div>
-            
+
             <input type="hidden" name="ReloadIndex" id="reloadIndex" value="" />
             <button type="submit" asp-page-handler="ReloadRow" id="reloadBtn" class="d-none">Reload</button>
         </form>
     </div>
 </div>
 
-<!-- Template for a row (hidden) -->
+<!-- ── Confirmation Modal (Task 4) ──────────────────────────────────────── -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-warning bg-gradient">
+                <h5 class="modal-title fw-bold" id="confirmModalLabel">⚠️ Xác nhận lưu phiếu nhập</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn lưu phiếu nhập kho này không?<br />
+                <span class="text-muted small">Thao tác này sẽ cập nhật tồn kho và giá bán của tất cả sản phẩm trong phiếu.</span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy (Cancel)</button>
+                <button type="button" class="btn btn-success" id="confirmSaveBtn">✅ Xác nhận lưu (Confirm)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template for a new row (hidden) -->
 <template id="rowTemplate">
     <tr>
         <td>
@@ -130,6 +162,11 @@
         <td>
             <input type="number" step="0.01" name="ImportRequest.Items[{0}].ImportPrice" class="form-control price-input" required min="0.01" placeholder="0.00" />
         </td>
+        <td>
+            <input type="file" name="imageFiles[{0}]" accept="image/jpeg,image/png,image/webp"
+                   class="form-control image-upload new-product-field" />
+            <div class="form-text text-muted small">Max 3MB · jpg/jpeg/png/webp</div>
+        </td>
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">❌</button>
         </td>
@@ -145,35 +182,40 @@
             const addRowBtn = document.getElementById('addRowBtn');
             const template = document.getElementById('rowTemplate').innerHTML;
 
+            // ── Confirmation modal wiring ────────────────────────────────────
+            document.getElementById('confirmSaveBtn').addEventListener('click', function () {
+                // Close modal then submit the real form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+                if (modal) modal.hide();
+                document.getElementById('importForm').submit();
+            });
+
+            // ── Row event attachment ────────────────────────────────────────
             function attachEventsToRow(row) {
                 const productSelect = row.querySelector('.product-select');
                 const newFields = row.querySelectorAll('.new-product-field');
-                
-                // Toggle fields based on selection
+
                 const toggleFields = (e) => {
                     const isNew = !productSelect.value;
-                    
+
                     if (!isNew) {
-                        // Check duplicate
+                        // Duplicate check
                         const allSelects = document.querySelectorAll('.product-select');
                         let count = 0;
-                        allSelects.forEach(s => {
-                            if (s.value === productSelect.value) count++;
-                        });
+                        allSelects.forEach(s => { if (s.value === productSelect.value) count++; });
                         if (count > 1) {
                             alert("This product has already been added in another row.");
-                            productSelect.value = ""; // Reset to new product
-                            toggleFields(); // Retry
+                            productSelect.value = "";
+                            toggleFields();
                             return;
                         }
 
-                        // Prevent reloading if triggered by initialization
                         if (e && e.type === 'change') {
                             const index = Array.from(tbody.children).indexOf(row);
                             document.getElementById('reloadIndex').value = index;
                             document.getElementById('reloadBtn').click();
                         }
-                        
+
                         newFields.forEach(f => {
                             f.disabled = true;
                             f.classList.add('bg-light');
@@ -182,7 +224,7 @@
                         newFields.forEach(f => {
                             f.disabled = false;
                             f.classList.remove('bg-light');
-                            if (e && e.type === 'change') f.value = ''; // clear only if user changed
+                            if (e && e.type === 'change') f.value = '';
                         });
                     }
                 };
@@ -193,18 +235,15 @@
             function addRow() {
                 const newRowHtml = template.replace(/\{0\}/g, rowCount);
                 tbody.insertAdjacentHTML('beforeend', newRowHtml);
-                
                 const newRow = tbody.lastElementChild;
                 attachEventsToRow(newRow);
-                
                 rowCount++;
             }
 
-            // Remove row (Delegate event)
-            tbody.addEventListener('click', function(e) {
+            // Remove row (delegated)
+            tbody.addEventListener('click', function (e) {
                 if (e.target.closest('.remove-row')) {
-                    const row = e.target.closest('tr');
-                    row.remove();
+                    e.target.closest('tr').remove();
                     reindexRows();
                 }
             });
@@ -212,25 +251,24 @@
             function reindexRows() {
                 const rows = tbody.querySelectorAll('tr');
                 rows.forEach((row, index) => {
-                    const inputs = row.querySelectorAll('[name]');
-                    inputs.forEach(input => {
+                    row.querySelectorAll('[name]').forEach(input => {
                         const name = input.getAttribute('name');
                         const newName = name.replace(/Items\[\d+\]/, `Items[${index}]`);
                         input.setAttribute('name', newName);
+                    });
+                    // Re-index the file input separately (not inside ImportRequest.Items)
+                    row.querySelectorAll('input[type="file"]').forEach(input => {
+                        input.setAttribute('name', `imageFiles[${index}]`);
                     });
                 });
                 rowCount = rows.length;
             }
 
             // Attach events to existing server-rendered rows
-            document.querySelectorAll('#itemsBody tr').forEach(row => {
-                attachEventsToRow(row);
-            });
+            document.querySelectorAll('#itemsBody tr').forEach(row => attachEventsToRow(row));
 
-            // Add first row if empty
-            if (rowCount === 0) {
-                addRow();
-            }
+            // Add first row if table is empty
+            if (rowCount === 0) addRow();
 
             addRowBtn.addEventListener('click', addRow);
         });

@@ -152,8 +152,11 @@
                 // Status Handling requirement: Use the BIT status (item.Status)
                 bool inStock = item.Status;
 
-                // Price checking from navigated list
-                decimal price = item.ProductPrices?.FirstOrDefault()?.Price ?? 0;
+                // Price: use the ACTIVE price (EndDate IS NULL), ordered by StartDate descending
+                decimal price = item.ProductPrices?
+                    .Where(pp => pp.EndDate == null)
+                    .OrderByDescending(pp => pp.StartDate)
+                    .FirstOrDefault()?.Price ?? 0;
 
                 <div class="p-card @(!inStock ? "oos" : "")"
                      data-name="@item.Name.ToLower()"
