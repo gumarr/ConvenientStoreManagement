@@ -23,6 +23,15 @@ namespace ConvenientStoreManagement.Models
         [Required]
         public bool Status { get; set; }
 
+        /// <summary>
+        /// Selling price = AverageImportPrice * PriceMultiplier.
+        /// Default 1.5; must be > 0.
+        /// </summary>
+        [Required]
+        [Column(TypeName = "decimal(5, 2)")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price multiplier must be greater than 0.")]
+        public decimal PriceMultiplier { get; set; } = 1.5m;
+
         [StringLength(500)]
         public string ImageUrl { get; set; }
 

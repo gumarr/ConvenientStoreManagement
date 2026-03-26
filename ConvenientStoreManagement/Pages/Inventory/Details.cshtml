@@ -7,15 +7,15 @@
 <div class="row mb-4">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="fw-bold">🔍 Chi tiết phiếu nhập #@Model.Receipt?.ReceiptId</h2>
+            <h2 class="fw-bold">🔍 Import Receipt Details #@Model.Receipt?.ReceiptId</h2>
             <p class="text-muted mb-0">
-                Nhân viên: <strong>@(Model.Receipt?.User?.FullName ?? Model.Receipt?.User?.Username ?? $"User #{Model.Receipt?.UserId}")</strong>
+                Staff: <strong>@(Model.Receipt?.User?.FullName ?? Model.Receipt?.User?.Username ?? $"User #{Model.Receipt?.UserId}")</strong>
                 &nbsp;·&nbsp;
-                Ngày nhập: <strong>@Model.Receipt?.ImportDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                Import Date: <strong>@Model.Receipt?.ImportDate.ToString("dd/MM/yyyy HH:mm")</strong>
             </p>
         </div>
         <a asp-page="/Inventory/History" class="btn btn-outline-secondary">
-            ← Quay lại danh sách
+            ← Back to List
         </a>
     </div>
 </div>
@@ -25,7 +25,7 @@
         @if (!Model.Details.Any())
         {
             <div class="text-center py-5 text-muted">
-                <p>Phiếu nhập này không có chi tiết.</p>
+                <p>This import receipt has no details.</p>
             </div>
         }
         else
@@ -34,11 +34,11 @@
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Sản phẩm (Product Name)</th>
-                            <th class="text-center">Số lượng (Qty)</th>
-                            <th class="text-end">Giá nhập gốc (Original Import Price)</th>
-                            <th class="text-end">Giá trung bình (Avg Import Price)</th>
-                            <th class="text-end">Thành tiền (Line Total)</th>
+                            <th>Product Name</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-end">Original Import Price</th>
+                            <th class="text-end">Avg Import Price</th>
+                            <th class="text-end">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,7 +56,7 @@
                     </tbody>
                     <tfoot class="table-secondary">
                         <tr>
-                            <td colspan="4" class="text-end fw-bold">Tổng cộng (Total):</td>
+                            <td colspan="4" class="text-end fw-bold">Total:</td>
                             <td class="text-end fw-bold text-danger fs-5">
                                 @Model.Receipt?.TotalCost.ToString("N0") VNĐ
                             </td>
@@ -66,8 +66,8 @@
             </div>
             <div class="mt-3">
                 <p class="text-muted small">
-                    <strong>Giá nhập gốc (Original Import Price)</strong>: giá thực tế khi nhập lô hàng này.<br />
-                    <strong>Giá trung bình (Avg Import Price)</strong>: giá trung bình có trọng số sau khi gộp với tồn kho cũ.
+                    <strong>Original Import Price</strong>: the actual price paid when importing this batch.<br />
+                    <strong>Avg Import Price</strong>: the weighted average price after combining with previous stock.
                 </p>
             </div>
         }
