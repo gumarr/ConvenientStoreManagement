@@ -36,5 +36,51 @@ namespace ConvenientStoreManagement.Services.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        private IQueryable<Product> BuildQuery(int? categoryId, string? searchString)
+        {
+            var query = _context.Products
+                                .Include(p => p.Category)
+                                .Include(p => p.ProductPrices)
+                                .AsNoTracking()
+                                .AsQueryable();
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                var lowerSearch = searchString.ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(lowerSearch));
+            }
+
+            return query;
+        }
+
+        public async Task<int> GetTotalCountAsync(int? categoryId, string? searchString)
+        {
+            var query = BuildQuery(categoryId, searchString);
+            return await query.CountAsync();
+        }
+
+        public async Task<System.Collections.Generic.List<Product>> GetProductsAsync(int? categoryId, string? searchString, int pageIndex, int pageSize)
+        {
+            var query = BuildQuery(categoryId, searchString);
+
+            return await query.OrderBy(p => p.Name)
+                              .Skip((pageIndex - 1) * pageSize)
+                              .Take(pageSize)
+                              .ToListAsync();
+        }
+
+        public async Task<System.Collections.Generic.List<Category>> GetCategoriesAsync()
+        {
+            return await _context.Categories
+                                 .OrderBy(c => c.Name)
+                                 .AsNoTracking()
+                                 .ToListAsync();
+        }
     }
 }

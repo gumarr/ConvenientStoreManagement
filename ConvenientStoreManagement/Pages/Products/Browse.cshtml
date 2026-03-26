@@ -1,0 +1,529 @@
+@page
+@model ConvenientStoreManagement.Pages.Products.BrowseModel
+
+@{
+    ViewData["Title"] = "Browse Products";
+    ViewData["IsFullWidth"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/product-browse.css" asp-append-version="true" />
+}
+
+@Html.AntiForgeryToken()
+
+<div class="browse-layout">
+
+    <!-- ══════════════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════════════ -->
+    <aside class="browse-sidebar">
+
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon"><i class="fas fa-store"></i></div>
+            <span>Convenient Store</span>
+        </div>
+
+        <!-- Search -->
+        <section class="sidebar-section">
+            <p class="sidebar-label"><i class="fas fa-search sidebar-label-icon"></i> TÌM KIẾM</p>
+            <form method="get" asp-page="/Products/Browse" id="searchForm">
+                <input type="hidden" name="categoryId" value="@Model.CurrentCategory" />
+                <input type="hidden" name="pageIndex" value="1" />
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           name="searchString"
+                           id="searchInput"
+                           placeholder="Tên sản phẩm…"
+                           value="@Model.CurrentSearch"
+                           autocomplete="off" />
+                    <button type="submit" class="search-btn" title="Search">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Categories -->
+        <section class="sidebar-section">
+            <p class="sidebar-label"><i class="fas fa-th-list sidebar-label-icon"></i> DANH MỤC</p>
+            <ul class="cat-list">
+                <li>
+                    <a class="cat-link @(Model.CurrentCategory == null ? "active" : "")"
+                       asp-page="/Products/Browse"
+                       asp-route-searchString="@Model.CurrentSearch"
+                       asp-route-pageIndex="1">
+                        <i class="fas fa-border-all cat-icon"></i>
+                        <span>Tất Cả</span>
+                        <span class="cat-pill">@Model.TotalProducts</span>
+                    </a>
+                </li>
+                @foreach (var cat in Model.Categories)
+                {
+                    <li>
+                        <a class="cat-link @(Model.CurrentCategory == cat.CategoryId ? "active" : "")"
+                           asp-page="/Products/Browse"
+                           asp-route-searchString="@Model.CurrentSearch"
+                           asp-route-categoryId="@cat.CategoryId"
+                           asp-route-pageIndex="1">
+                            <i class="fas fa-tag cat-icon"></i>
+                            <span>@cat.Name</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <!-- Sort -->
+        <section class="sidebar-section">
+            <p class="sidebar-label"><i class="fas fa-sort sidebar-label-icon"></i> SẮP XẾP</p>
+            <ul class="sort-list">
+                <li class="sort-link active" data-sort="default">
+                    <i class="fas fa-star sort-icon"></i> Nổi bật
+                </li>
+                <li class="sort-link" data-sort="price-asc">
+                    Giá: Thấp <i class="fas fa-arrow-right mx-1 text-xs"></i> Cao
+                </li>
+                <li class="sort-link" data-sort="price-desc">
+                    Giá: Cao <i class="fas fa-arrow-right mx-1 text-xs"></i> Thấp
+                </li>
+                <li class="sort-link" data-sort="name-asc">
+                    Tên: A <i class="fas fa-arrow-right mx-1 text-xs"></i> Z
+                </li>
+            </ul>
+        </section>
+
+    </aside>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════════════════ -->
+    <main class="browse-main container-fluid p-0">
+        <div class="row m-0">
+            <!-- CỘT 8: Khu vực Danh sách sản phẩm -->
+            <div class="col-md-8 pb-3">
+
+        <!-- Top bar -->
+        <div class="main-topbar">
+            <div class="main-count">
+                <span id="visibleCount">@Model.TotalProducts</span> sản phẩm
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentSearch))
+            {
+                <span class="active-filter-badge">
+                    <i class="fas fa-search"></i> "@Model.CurrentSearch"
+                    <a asp-page="/Products/Browse"
+                       asp-route-categoryId="@Model.CurrentCategory"
+                       class="clear-filter" title="Clear search">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </span>
+            }
+            @if (Model.CurrentCategory.HasValue)
+            {
+                <span class="active-filter-badge">
+                    <i class="fas fa-tag"></i> @(Model.Categories.FirstOrDefault(c => c.CategoryId == Model.CurrentCategory)?.Name ?? "Category")
+                    <a asp-page="/Products/Browse"
+                       asp-route-searchString="@Model.CurrentSearch"
+                       class="clear-filter" title="Clear category">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </span>
+            }
+        </div>
+
+        <!-- Product Grid -->
+        <div id="productGrid" class="product-grid">
+
+            @if (!Model.Products.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <p>Không tìm thấy sản phẩm</p>
+                    <span>Thử thay đổi từ khóa hoặc danh mục.</span>
+                </div>
+            }
+
+            @foreach (var item in Model.Products)
+            {
+                // Status Handling requirement: Use the BIT status (item.Status)
+                bool inStock = item.Status;
+
+                // Price checking from navigated list
+                decimal price = item.ProductPrices?.FirstOrDefault()?.Price ?? 0;
+
+                <div class="p-card @(!inStock ? "oos" : "")"
+                     data-name="@item.Name.ToLower()"
+                     data-price="@price"
+                     data-stock="@item.Stock">
+
+                    <!-- Image -->
+                    <div class="p-img">
+    @{
+        // Mặc định sử dụng placeholder nếu ImageUrl trống
+        string displayUrl = "/img/placeholder.png"; 
+
+        if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+        {
+            displayUrl = item.ImageUrl.Replace("\\", "/");
+
+            // Nếu đường dẫn không bắt đầu bằng http hoặc / thì thêm dấu / ở đầu
+            if (!displayUrl.StartsWith("http") && !displayUrl.StartsWith("/"))
+            {
+                displayUrl = "/" + displayUrl;
+            }
+        }
+    }
+    
+    <img src="@displayUrl" 
+         onerror="this.src='/img/placeholder.png'" 
+         alt="@item.Name" 
+         loading="lazy" />
+
+    @if (inStock)
+    {
+        <span class="badge badge-in">In Stock</span>
+    }
+    else
+    {
+        <span class="badge badge-oos">Out of Stock</span>
+    }
+</div>
+
+                    <!-- Body -->
+                    <div class="p-body">
+
+                        <!-- Category label -->
+                        <span class="p-category">@(item.Category?.Name ?? "General")</span>
+
+                        <!-- Name -->
+                        <h3 class="p-name" title="@item.Name">@item.Name</h3>
+
+                        <div class="p-spacer"></div>
+
+                        <!-- Unit -->
+                        @if (!string.IsNullOrWhiteSpace(item.Unit))
+                        {
+                            <div class="p-unit">
+                                <i class="fas fa-box-open"></i> @item.Unit
+                            </div>
+                        }
+
+                        <!-- Price + Cart -->
+                        <div class="p-footer">
+                            <div class="p-price">
+                                @price.ToString("N0") <span class="currency">VNĐ</span>
+                            </div>
+
+                            <button class="cart-btn"
+                                    id="cart-@item.ProductId"
+                                    title="@(inStock ? "Add to Cart" : "Out of Stock")"
+                                    @(inStock ? "" : "disabled")
+                                    onclick="addToCart(this, @item.ProductId, '@Html.Raw(item.Name.Replace("'", "\\'"))')">
+                                <i class="fas fa-plus"></i>
+                                <span>Add to Cart</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="pagination-nav" aria-label="Product pagination">
+
+                @* Previous *@
+                @if (Model.PageIndex > 1)
+                {
+                    <a class="page-btn page-nav"
+                       asp-page="/Products/Browse"
+                       asp-route-searchString="@Model.CurrentSearch"
+                       asp-route-categoryId="@Model.CurrentCategory"
+                       asp-route-pageIndex="@(Model.PageIndex - 1)">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="page-btn page-nav disabled">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </span>
+                }
+
+                @* Page numbers *@
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.PageIndex)
+                    {
+                        <span class="page-btn active">@i</span>
+                    }
+                    else if (i == 1 || i == Model.TotalPages || Math.Abs(i - Model.PageIndex) <= 2)
+                    {
+                        <a class="page-btn"
+                           asp-page="/Products/Browse"
+                           asp-route-searchString="@Model.CurrentSearch"
+                           asp-route-categoryId="@Model.CurrentCategory"
+                           asp-route-pageIndex="@i">@i</a>
+                    }
+                    else if (Math.Abs(i - Model.PageIndex) == 3)
+                    {
+                        <span class="page-btn ellipsis">…</span>
+                    }
+                }
+
+                @* Next *@
+                @if (Model.PageIndex < Model.TotalPages)
+                {
+                    <a class="page-btn page-nav"
+                       asp-page="/Products/Browse"
+                       asp-route-searchString="@Model.CurrentSearch"
+                       asp-route-categoryId="@Model.CurrentCategory"
+                       asp-route-pageIndex="@(Model.PageIndex + 1)">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="page-btn page-nav disabled">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </span>
+                }
+
+            </nav>
+        }
+
+            </div> <!-- /col-md-8 -->
+
+            <!-- CỘT 4: Khu vực Giỏ hàng (POS) -->
+            <div class="col-md-4 bg-light bg-gradient border-start py-3" style="min-height: 100vh;">
+                <div class="cart-panel bg-white rounded shadow-sm p-4 sticky-top" style="top: 20px;">
+                    <h4 class="border-bottom pb-3 mb-4 fw-bold text-primary">
+                        <i class="fas fa-shopping-cart me-2"></i> POS Giỏ Hàng
+                    </h4>
+                    
+                    <!-- Danh sách items -->
+                    <div id="cartItems" class="mb-4" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-box-open fs-1 text-light mb-3"></i>
+                            <p class="mb-0">Giỏ hàng đang trống!</p>
+                        </div>
+                    </div>
+
+                    <hr class="text-secondary mb-4" />
+
+                    <!-- Box khuyến mãi -->
+                    <div class="input-group mb-4">
+                        <input type="text" id="promoCode" class="form-control" placeholder="Mã khuyến mãi...">
+                        <button class="btn btn-outline-secondary fw-bold" onclick="applyPromo()">Áp dụng</button>
+                    </div>
+
+                    <!-- Tổng tiền -->
+                    <div class="bg-light rounded p-3 mb-4">
+                        <div class="d-flex justify-content-between mb-2 text-muted">
+                            <span>Tạm tính:</span>
+                            <strong id="cartSubtotal" class="text-dark">0 VNĐ</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 text-muted">
+                            <span>Chiết khấu:</span>
+                            <strong id="cartDiscount" class="text-success">0 VNĐ</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <span class="fs-5 fw-bold text-dark">Tổng cộng:</span>
+                            <strong id="cartTotal" class="fs-4 text-danger mb-0">0 VNĐ</strong>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow-sm" onclick="checkout()">
+                        <i class="fas fa-credit-card me-2"></i> Đã thanh toán
+                    </button>
+                </div>
+            </div> <!-- /col-md-4 -->
+
+        </div> <!-- /row -->
+    </main>
+</div>
+
+@section Scripts {
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Client-side sort (reorders already-loaded cards without refetch)
+───────────────────────────────────────────────────────────── */
+function cards() { return Array.from(document.querySelectorAll('.p-card')); }
+
+document.querySelectorAll('.sort-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-link').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const sort = btn.dataset.sort;
+        const grid = document.getElementById('productGrid');
+        const list = cards().sort((a, b) => {
+            if (sort === 'price-asc')  return +a.dataset.price - +b.dataset.price;
+            if (sort === 'price-desc') return +b.dataset.price - +a.dataset.price;
+            if (sort === 'name-asc')   return a.dataset.name.localeCompare(b.dataset.name);
+            return 0;
+        });
+        list.forEach(c => grid.appendChild(c));
+    });
+});
+
+/* ─────────────────────────────────────────────────────────────
+   Cart State and Logic
+───────────────────────────────────────────────────────────── */
+let cart = [];
+let discountAmount = 0;
+
+function addToCart(btn, productId, name) {
+    if (btn.disabled) return;
+    
+    // Lấy giá từ dataset tĩnh trên thẻ card khi load trang
+    const card = btn.closest('.p-card');
+    const price = card ? parseFloat(card.dataset.price) : 0;
+    
+    const existingItem = cart.find(x => x.productId === productId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            productId: productId,
+            name: name,
+            quantity: 1,
+            unitPrice: price,
+            discountApplied: 0
+        });
+    }
+
+    // UI Feedback
+    const icon = btn.querySelector('i');
+    const label = btn.querySelector('span');
+    icon.className  = 'fas fa-check';
+    label.textContent = 'Added';
+    btn.classList.add('btn-success');
+
+    setTimeout(() => {
+        icon.className  = 'fas fa-plus';
+        label.textContent = 'Add to Cart';
+        btn.classList.remove('btn-success');
+    }, 1000);
+
+    renderCart();
+}
+
+function updateQuantity(productId, change) {
+    const itemIndex = cart.findIndex(x => x.productId === productId);
+    if (itemIndex > -1) {
+        cart[itemIndex].quantity += change;
+        if (cart[itemIndex].quantity <= 0) {
+            cart.splice(itemIndex, 1);
+        }
+        renderCart();
+    }
+}
+
+function applyPromo() {
+    const code = document.getElementById('promoCode').value.trim();
+    if (code === 'DISCOUNT10') {
+        discountAmount = 10000;
+        alert('Áp dụng mã thành công: Giảm 10,000đ!');
+    } else {
+        discountAmount = 0;
+        alert('Mã không hợp lệ!');
+    }
+    renderCart();
+}
+
+function renderCart() {
+    const cartContainer = document.getElementById('cartItems');
+    let subtotal = 0;
+
+    if (cart.length === 0) {
+        cartContainer.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-box-open fs-1 text-light mb-3"></i><p class="mb-0">Giỏ hàng đang trống!</p></div>';
+        document.getElementById('cartSubtotal').textContent = '0 VNĐ';
+        document.getElementById('cartDiscount').textContent = '0 VNĐ';
+        document.getElementById('cartTotal').textContent = '0 VNĐ';
+        return;
+    }
+
+    cartContainer.innerHTML = '';
+    cart.forEach(item => {
+        const itemTotal = item.unitPrice * item.quantity;
+        subtotal += itemTotal;
+
+        cartContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                <div style="flex: 1; padding-right: 10px;">
+                    <div class="fw-bold fs-6 text-truncate" title="${item.name}">${item.name}</div>
+                    <div class="text-primary small fw-semibold">${item.unitPrice.toLocaleString()} VNĐ</div>
+                </div>
+                <div class="d-flex align-items-center bg-light rounded shadow-sm">
+                    <button class="btn btn-sm btn-light text-secondary px-2 focus-ring" style="min-width: 32px;" onclick="updateQuantity(${item.productId}, -1)"><i class="fas fa-minus"></i></button>
+                    <span class="fw-bold px-2 text-dark" style="min-width: 30px; text-align: center;">${item.quantity}</span>
+                    <button class="btn btn-sm btn-light text-secondary px-2 focus-ring" style="min-width: 32px;" onclick="updateQuantity(${item.productId}, 1)"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>`;
+    });
+
+    const total = subtotal - discountAmount;
+    
+    document.getElementById('cartSubtotal').textContent = subtotal.toLocaleString() + ' VNĐ';
+    document.getElementById('cartDiscount').textContent = '-' + discountAmount.toLocaleString() + ' VNĐ';
+    document.getElementById('cartTotal').textContent = Math.max(0, total).toLocaleString() + ' VNĐ';
+}
+
+function checkout() {
+    if (cart.length === 0) {
+        alert('Giỏ hàng chưa có sản phẩm!');
+        return;
+    }
+
+    let subtotal = 0;
+    cart.forEach(item => subtotal += item.unitPrice * item.quantity);
+    const totalAmount = Math.max(0, subtotal - discountAmount);
+
+    let discountPerItem = cart.length > 0 ? (discountAmount / cart.length) : 0;
+    const checkoutItems = cart.map(item => ({
+        ProductId: item.productId,
+        Quantity: item.quantity,
+        UnitPrice: item.unitPrice,
+        DiscountApplied: discountPerItem
+    }));
+
+    const payload = {
+        Items: checkoutItems,
+        TotalAmount: totalAmount,
+        PaymentMethod: 'Cash'
+    };
+
+    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+
+    fetch('?handler=Checkout', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            cart = [];
+            discountAmount = 0;
+            renderCart();
+            window.location.reload(); // Reload trang để hiển thị Stock còn lại
+        } else {
+            alert('Thanh toán thất bại: ' + data.message);
+        }
+    })
+    .catch(err => {
+        alert('Lỗi kết nối máy chủ: ' + err);
+    });
+}
+</script>
+}
