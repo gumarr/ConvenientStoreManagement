@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ConvenientStoreManagement.Data;
@@ -18,6 +19,23 @@ namespace ConvenientStoreManagement.Services.Implementations
         {
             _context = context;
             _pricingService = pricingService;
+        }
+
+        public async Task<List<Order>> GetAllOrdersAsync()
+        {
+            return await _context.Orders
+                .Include(o => o.User)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+
+        public async Task<Order> GetOrderByIdAsync(int orderId)
+        {
+            return await _context.Orders
+                .Include(o => o.User)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
         }
 
         public async Task<bool> ProcessCheckoutAsync(CheckoutViewModel model, int cashierUserId)
