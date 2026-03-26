@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using ConvenientStoreManagement.Data;
 using ConvenientStoreManagement.Services.Interfaces;
@@ -21,12 +22,15 @@ namespace ConvenientStoreManagement.Pages.Inventory
         private readonly StoreDbContext _context;
         private readonly IInventoryService _inventoryService;
         private readonly IProductService _productService;
+        private readonly IPricingService _pricingService;
 
-        public ImportModel(StoreDbContext context, IInventoryService inventoryService, IProductService productService)
+        public ImportModel(StoreDbContext context, IInventoryService inventoryService,
+            IProductService productService, IPricingService pricingService)
         {
             _context = context;
             _inventoryService = inventoryService;
             _productService = productService;
+            _pricingService = pricingService;
         }
 
         [BindProperty]
@@ -38,15 +42,23 @@ namespace ConvenientStoreManagement.Pages.Inventory
         public List<SelectListItem> Products { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
 
+        /// <summary>
+        /// Serialised product metadata for JS preview calculation.
+        /// Shape: { [productId: string]: { stock: number, avgPrice: number, multiplier: number } }
+        /// </summary>
+        public string ProductMetaJson { get; set; } = "{}";
+
         public async Task<IActionResult> OnGetAsync()
         {
             await LoadDropdownsAsync();
+            await LoadProductMetaAsync();
             return Page();
         }
 
         public async Task<IActionResult> OnPostReloadRowAsync()
         {
             await LoadDropdownsAsync();
+            await LoadProductMetaAsync();
             ModelState.Clear();
 
             if (ImportRequest.Items != null && ReloadIndex.HasValue && ReloadIndex.Value < ImportRequest.Items.Count)
@@ -60,6 +72,8 @@ namespace ConvenientStoreManagement.Pages.Inventory
                         item.Name = product.Name;
                         item.CategoryId = product.CategoryId;
                         item.Unit = product.Unit;
+                        // Multiplier is READ-ONLY for existing products; clear so it's not editable
+                        item.PriceMultiplier = null;
                     }
                 }
                 else
@@ -67,6 +81,7 @@ namespace ConvenientStoreManagement.Pages.Inventory
                     item.Name = null;
                     item.CategoryId = null;
                     item.Unit = null;
+                    item.PriceMultiplier = null;
                 }
             }
 
@@ -79,11 +94,11 @@ namespace ConvenientStoreManagement.Pages.Inventory
             {
                 ModelState.AddModelError(string.Empty, "Please add at least one item to import.");
                 await LoadDropdownsAsync();
+                await LoadProductMetaAsync();
                 return Page();
             }
 
             // Bind uploaded files by index from the form
-            // Files are posted with name "imageFiles[i]" – we map them back to the items
             var files = Request.Form.Files;
 
             for (int i = 0; i < ImportRequest.Items.Count; i++)
@@ -92,11 +107,12 @@ namespace ConvenientStoreManagement.Pages.Inventory
 
                 if (item.ProductId.HasValue && item.ProductId.Value > 0)
                 {
-                    // Existing product: clear model errors for disabled fields and skip image
+                    // Existing product: clear model errors for disabled / irrelevant fields
                     ModelState.Remove($"ImportRequest.Items[{i}].Name");
                     ModelState.Remove($"ImportRequest.Items[{i}].CategoryId");
                     ModelState.Remove($"ImportRequest.Items[{i}].Unit");
                     ModelState.Remove($"ImportRequest.Items[{i}].ImageFile");
+                    ModelState.Remove($"ImportRequest.Items[{i}].PriceMultiplier");
                 }
                 else
                 {
@@ -110,12 +126,16 @@ namespace ConvenientStoreManagement.Pages.Inventory
                     if (string.IsNullOrWhiteSpace(item.Unit))
                         ModelState.AddModelError($"ImportRequest.Items[{i}].Unit", "Unit is required for new products.");
 
+                    // Multiplier required for new products
+                    if (!item.PriceMultiplier.HasValue || item.PriceMultiplier.Value <= 0)
+                        ModelState.AddModelError($"ImportRequest.Items[{i}].PriceMultiplier",
+                            "Price multiplier is required for new products and must be > 0.");
+
                     // Attach uploaded image file to the item
                     var fileKey = $"imageFiles[{i}]";
                     var uploadedFile = files.GetFile(fileKey);
                     if (uploadedFile != null && uploadedFile.Length > 0)
                     {
-                        // Validate size
                         if (uploadedFile.Length > 3 * 1024 * 1024)
                         {
                             ModelState.AddModelError($"ImportRequest.Items[{i}].ImageFile",
@@ -123,7 +143,6 @@ namespace ConvenientStoreManagement.Pages.Inventory
                         }
                         else
                         {
-                            // Validate type
                             var allowed = new[] { "image/jpeg", "image/png", "image/webp" };
                             if (!allowed.Contains(uploadedFile.ContentType, StringComparer.OrdinalIgnoreCase))
                             {
@@ -142,6 +161,7 @@ namespace ConvenientStoreManagement.Pages.Inventory
             if (!ModelState.IsValid)
             {
                 await LoadDropdownsAsync();
+                await LoadProductMetaAsync();
                 return Page();
             }
 
@@ -158,18 +178,21 @@ namespace ConvenientStoreManagement.Pages.Inventory
             }
             catch (InvalidOperationException ex)
             {
-                // Image validation errors raised by the service layer
                 ModelState.AddModelError(string.Empty, ex.Message);
                 await LoadDropdownsAsync();
+                await LoadProductMetaAsync();
                 return Page();
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, $"An error occurred: {ex.Message}");
                 await LoadDropdownsAsync();
+                await LoadProductMetaAsync();
                 return Page();
             }
         }
+
+        // ── Private Helpers ───────────────────────────────────────────────────────
 
         private async Task LoadDropdownsAsync()
         {
@@ -187,6 +210,47 @@ namespace ConvenientStoreManagement.Pages.Inventory
                 Value = c.CategoryId.ToString(),
                 Text = c.Name
             }).ToList();
+        }
+
+        /// <summary>
+        /// Builds a JSON dict of product data needed by the JS preview calculator.
+        /// </summary>
+        private async Task LoadProductMetaAsync()
+        {
+            var products = await _context.Products.AsNoTracking().ToListAsync();
+
+            // Get the latest selling/import price for each product
+            var priceDict = await _context.ProductPrices
+                .Where(pp => pp.EndDate == null)          // active prices only
+                .AsNoTracking()
+                .GroupBy(pp => pp.ProductId)
+                .Select(g => new { ProductId = g.Key, AvgImportPrice = g.Max(x => x.Price) })
+                .ToDictionaryAsync(x => x.ProductId, x => x.AvgImportPrice);
+
+            // Actually we need the *import* price (average), not the selling price.
+            // The best source is InventoryReceiptDetails (latest ImportPrice per product).
+            var importPriceDict = await _context.InventoryReceiptDetails
+                .AsNoTracking()
+                .GroupBy(d => d.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    // ImportPrice on the detail IS already the weighted average at time of import
+                    LatestAvgImportPrice = g.OrderByDescending(d => d.ReceiptDetailId).Select(d => d.ImportPrice).FirstOrDefault()
+                })
+                .ToDictionaryAsync(x => x.ProductId, x => x.LatestAvgImportPrice);
+
+            var meta = products.ToDictionary(
+                p => p.ProductId.ToString(),
+                p => new
+                {
+                    stock = p.Stock,
+                    avgPrice = importPriceDict.TryGetValue(p.ProductId, out var ap) ? ap : 0m,
+                    multiplier = p.PriceMultiplier
+                }
+            );
+
+            ProductMetaJson = JsonSerializer.Serialize(meta);
         }
     }
 }

@@ -85,7 +85,7 @@ namespace ConvenientStoreManagement.Services.Implementations
                         };
                         _context.InventoryReceiptDetails.Add(detail);
 
-                        decimal sellingPrice = newAvgPrice * 1.5m;
+                        decimal sellingPrice = newAvgPrice * product.PriceMultiplier;
                         await _pricingService.UpdateSellingPriceAsync(product.ProductId, sellingPrice);
                     }
                     else
@@ -98,6 +98,7 @@ namespace ConvenientStoreManagement.Services.Implementations
                             imageUrl = await SaveProductImageAsync(item);
                         }
 
+                        decimal multiplier = item.PriceMultiplier ?? 1.5m;
                         var product = new Product
                         {
                             Name = item.Name!,
@@ -105,7 +106,8 @@ namespace ConvenientStoreManagement.Services.Implementations
                             Unit = item.Unit,
                             Stock = item.Quantity,
                             Status = true,
-                            ImageUrl = imageUrl
+                            ImageUrl = imageUrl,
+                            PriceMultiplier = multiplier
                         };
                         await _productService.CreateProductAsync(product);
 
@@ -119,7 +121,7 @@ namespace ConvenientStoreManagement.Services.Implementations
                         };
                         _context.InventoryReceiptDetails.Add(detail);
 
-                        decimal sellingPrice = item.ImportPrice * 1.5m;
+                        decimal sellingPrice = item.ImportPrice * multiplier;
                         await _pricingService.UpdateSellingPriceAsync(product.ProductId, sellingPrice);
                     }
                 }

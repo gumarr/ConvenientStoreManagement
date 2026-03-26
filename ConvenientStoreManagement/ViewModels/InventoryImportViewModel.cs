@@ -28,6 +28,13 @@ namespace ConvenientStoreManagement.ViewModels
         public decimal ImportPrice { get; set; }
 
         /// <summary>
+        /// Price multiplier for NEW products only (existing products use their stored multiplier).
+        /// Recommend range 1.0–3.0; must be > 0.
+        /// </summary>
+        [Range(0.01, 10.0, ErrorMessage = "Price multiplier must be between 0.01 and 10.")]
+        public decimal? PriceMultiplier { get; set; }
+
+        /// <summary>
         /// Optional image upload for NEW products only.
         /// Max 3MB; allowed types: jpg, jpeg, png, webp.
         /// </summary>
