@@ -20,6 +20,10 @@ namespace ConvenientStoreManagement.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
 
+        // ── New stat tables ─────────────────────────────────────────────────
+        public DbSet<DailyProductStats> DailyProductStats { get; set; }
+        public DbSet<DailySummaryStats> DailySummaryStats { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -66,6 +70,12 @@ namespace ConvenientStoreManagement.Data
                     .WithOne(ird => ird.Product)
                     .HasForeignKey(ird => ird.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                // DailyProductStats → Product
+                entity.HasMany<DailyProductStats>()
+                    .WithOne(d => d.Product)
+                    .HasForeignKey(d => d.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Configure Order
@@ -89,6 +99,18 @@ namespace ConvenientStoreManagement.Data
                     .WithOne(rd => rd.Receipt)
                     .HasForeignKey(rd => rd.ReceiptId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure DailyProductStats — composite unique index (ProductId, Date)
+            modelBuilder.Entity<DailyProductStats>(entity =>
+            {
+                entity.HasIndex(e => new { e.ProductId, e.Date }).IsUnique();
+            });
+
+            // Configure DailySummaryStats — unique Date index
+            modelBuilder.Entity<DailySummaryStats>(entity =>
+            {
+                entity.HasIndex(e => e.Date).IsUnique();
             });
         }
     }

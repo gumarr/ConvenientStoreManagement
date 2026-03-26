@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace ConvenientStoreManagement.ViewModels
 {
@@ -25,5 +26,11 @@ namespace ConvenientStoreManagement.ViewModels
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Import Price must be greater than 0")]
         public decimal ImportPrice { get; set; }
+
+        /// <summary>
+        /// Optional image upload for NEW products only.
+        /// Max 3MB; allowed types: jpg, jpeg, png, webp.
+        /// </summary>
+        public IFormFile? ImageFile { get; set; }
     }
 }
