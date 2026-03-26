@@ -19,6 +19,9 @@ builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddHttpClient<IAIService, GeminiService>();
+builder.Services.AddScoped<IAIRecommendationService, AIRecommendationService>();
 
 builder.Services.AddAuthentication(options =>
 {

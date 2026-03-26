@@ -1,201 +1,140 @@
 @page
 @model ConvenientStoreManagement.Pages.Dashboard.IndexModel
 @{
-    ViewData["Title"] = "Revenue & Profit Statistics";
+    ViewData[index: "Title"] = "Revenue & Profit Statistics";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Revenue & Profit Statistics</h2>
 </div>
 
-<!-- Summary Cards -->
+<!-- ================= SUMMARY ================= -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white shadow-sm border-0 h-100">
+        <div class="card bg-primary text-white shadow-sm border-0">
             <div class="card-body">
-                <h6 class="text-white-50">Today (Revenue)</h6>
-                <h3 class="fw-bold mb-0">@Model.Stats.TodayRevenue.ToString("N0") ₫</h3>
+                <h6>Today Revenue</h6>
+                <h3>@Model.Stats.TodayRevenue.ToString(format: "N0") ₫</h3>
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card bg-success text-white shadow-sm border-0 h-100">
+        <div class="card bg-success text-white shadow-sm border-0">
             <div class="card-body">
-                <h6 class="text-white-50">Today (Profit)</h6>
-                <h3 class="fw-bold mb-0">@Model.Stats.TodayProfit.ToString("N0") ₫</h3>
+                <h6>Today Profit</h6>
+                <h3>@Model.Stats.TodayProfit.ToString(format: "N0") ₫</h3>
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card bg-info text-white shadow-sm border-0 h-100">
+        <div class="card bg-info text-white shadow-sm border-0">
             <div class="card-body">
-                <h6 class="text-white-50">This Week (Revenue)</h6>
-                <h3 class="fw-bold mb-0">@Model.Stats.ThisWeekRevenue.ToString("N0") ₫</h3>
+                <h6>This Week Revenue</h6>
+                <h3>@Model.Stats.ThisWeekRevenue.ToString(format: "N0") ₫</h3>
             </div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card bg-warning text-dark shadow-sm border-0 h-100">
+        <div class="card bg-warning shadow-sm border-0">
             <div class="card-body">
-                <h6 class="text-dark-50">This Month (Revenue)</h6>
-                <h3 class="fw-bold mb-0">@Model.Stats.ThisMonthRevenue.ToString("N0") ₫</h3>
+                <h6>This Month Revenue</h6>
+                <h3>@Model.Stats.ThisMonthRevenue.ToString(format: "N0") ₫</h3>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ================= CHART + TOP ================= -->
 <div class="row g-4 mb-4">
-    <!-- Line Chart: Revenue & Profit -->
     <div class="col-lg-8">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white pt-3 pb-2">
-                <h5 class="mb-0">Revenue & Profit (Last 30 Days)</h5>
-            </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-header">Revenue & Profit (30 days)</div>
             <div class="card-body">
-                <canvas id="revenueChart" height="100"></canvas>
+                <canvas id="revenueChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Bar Chart / List: Top Products -->
     <div class="col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white pt-3 pb-2">
-                <h5 class="mb-0">Top 5 Best Selling Products</h5>
-                <small class="text-muted text-xs">In the last 30 days</small>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    @if(Model.Stats.TopProducts.Any())
-                    {
-                        @foreach(var p in Model.Stats.TopProducts)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center p-3">
-                                <span class="fw-medium text-truncate me-2" title="@p.ProductName">@p.ProductName</span>
-                                <span class="badge bg-primary rounded-pill px-3 py-2">@p.TotalQuantitySold</span>
-                            </li>
-                        }
-                    }
-                    else
-                    {
-                        <li class="list-group-item p-4 text-muted text-center">
-                            <i class="fas fa-chart-bar fs-2 mb-2 text-light"></i><br/>
-                            No transaction data available
-                        </li>
-                    }
-                </ul>
+        <div class="card shadow-sm border-0">
+            <div class="card-header">Top 5 Products</div>
+            <div class="card-body">
+                @foreach (ViewModels.TopProductDto p in Model.Stats.TopProducts)
+                {
+                    <div class="d-flex justify-content-between">
+                        <span>@p.ProductName</span>
+                        <b>@p.TotalQuantitySold</b>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
-<!-- Low Stock Table -->
+<!-- ================= LOW STOCK ================= -->
 @if (Model.Stats.LowStockProductCount > 0)
 {
-    <div class="card shadow-sm border-0 border-start border-danger border-4">
-        <div class="card-header bg-white pt-3 pb-2 text-danger fw-bold d-flex align-items-center gap-2">
-            <span class="fs-5">⚠️</span> Low Stock Warning (@Model.Stats.LowStockProductCount)
+    <div class="card border-danger border-2 mb-4">
+        <div class="card-header text-danger">⚠️ Low Stock</div>
+        <div class="card-body">
+            @foreach (ViewModels.LowStockProductDto p in Model.Stats.LowStockProducts)
+            {
+                <div class="d-flex justify-content-between">
+                    <span>@p.ProductName</span>
+                    <b class="text-danger">@p.CurrentStock</b>
+                </div>
+            }
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">Product</th>
-                            <th class="text-center">Current Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var p in Model.Stats.LowStockProducts)
-                        {
-                            <tr>
-                                <td class="ps-4 fw-medium">@p.ProductName</td>
-                                <td class="text-center text-danger fw-bold fs-5">@p.CurrentStock</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    </div>
+}
+
+<!-- ================= AI ================= -->
+<form method="post" asp-page-handler="AISuggest">
+    <button class="btn btn-dark mb-3">🤖 AI Suggest</button>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.AIResult))
+{
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            AI Suggestion
+        </div>
+        <div class="card-body">
+            @Html.Raw(Model.AIResult.Replace(oldValue: "\n", newValue: "<br/>"))
         </div>
     </div>
 }
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartLabels));
-            const chartRev = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartRevenue));
-            const chartProf = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartProfit));
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Revenue (VNĐ)',
-                            data: chartRev,
-                            borderColor: '#0d6efd',
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: true,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Profit (VNĐ)',
-                            data: chartProf,
-                            borderColor: '#198754',
-                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: true,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f8f9fa' },
-                            ticks: {
-                                callback: function(value) {
-                                    return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
-                                }
-                            }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
+    <script>
+        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartLabels));
+        const revenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartRevenue));
+        const profit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats.ChartProfit));
+
+        const ctx = document.getElementById('revenueChart');
+
+        new Chart(ctx, {
+        type: 'line',
+        data: {
+        labels: labels,
+        datasets: [
+        {
+        label: 'Revenue',
+        data: revenue,
+        borderColor: '#0d6efd'
+        },
+        {
+        label: 'Profit',
+        data: profit,
+        borderColor: '#198754'
+        }
+        ]
+        }
         });
     </script>
 }
