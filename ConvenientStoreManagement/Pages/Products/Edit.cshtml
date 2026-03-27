@@ -1,0 +1,365 @@
+@page
+@model ConvenientStoreManagement.Pages.Products.EditModel
+
+@{
+    ViewData["Title"] = "Edit Product – " + Model.Product.Name;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ── Page layout ── */
+        .edit-wrapper {
+            max-width: 820px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* ── Card ── */
+        .edit-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+        .edit-card-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 1.5rem 2rem;
+            color: #fff;
+        }
+        .edit-card-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+        .edit-card-header p {
+            margin: .25rem 0 0;
+            opacity: .85;
+            font-size: .9rem;
+        }
+        .edit-card-body {
+            padding: 2rem;
+        }
+
+        /* ── Form groups ── */
+        .form-section-title {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6366f1;
+            margin: 1.5rem 0 .75rem;
+        }
+        .form-section-title:first-child { margin-top: 0; }
+
+        .form-label {
+            font-weight: 600;
+            font-size: .875rem;
+            color: #374151;
+            margin-bottom: .35rem;
+        }
+        .form-control, .form-select {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: .55rem .9rem;
+            font-size: .95rem;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+            outline: none;
+        }
+        .form-text { font-size: .8rem; color: #9ca3af; }
+
+        /* ── Status toggle ── */
+        .status-toggle {
+            display: flex;
+            gap: 1rem;
+        }
+        .status-option {
+            flex: 1;
+            cursor: pointer;
+        }
+        .status-option input[type="radio"] { display: none; }
+        .status-option .status-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .6rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            transition: all .2s;
+            color: #6b7280;
+        }
+        .status-option input:checked + .status-label.active-lbl {
+            border-color: #10b981;
+            color: #10b981;
+            background: #ecfdf5;
+        }
+        .status-option input:checked + .status-label.inactive-lbl {
+            border-color: #ef4444;
+            color: #ef4444;
+            background: #fef2f2;
+        }
+
+        /* ── Price Preview Panel ── */
+        .price-preview {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #6ee7b7;
+            border-radius: 14px;
+            padding: 1.2rem 1.5rem;
+            margin-top: .75rem;
+        }
+        .price-preview.no-data {
+            background: #fafafa;
+            border-color: #e5e7eb;
+        }
+        .price-preview-title {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: .75rem;
+        }
+        .price-preview.no-data .price-preview-title { color: #9ca3af; }
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .35rem 0;
+        }
+        .preview-row + .preview-row { border-top: 1px solid rgba(0,0,0,.06); }
+        .preview-label { font-size: .875rem; color: #374151; font-weight: 500; }
+        .preview-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        .preview-value.highlight {
+            font-size: 1.1rem;
+            color: #6366f1;
+        }
+        .preview-no-data {
+            text-align: center;
+            color: #9ca3af;
+            font-size: .9rem;
+            padding: .5rem 0;
+        }
+        .preview-no-data i { margin-right: .4rem; }
+
+        /* ── Buttons ── */
+        .btn-save {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: .7rem 1.8rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity .2s, transform .1s;
+        }
+        .btn-save:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-save:active { transform: translateY(0); }
+        .btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 10px;
+            padding: .7rem 1.4rem;
+            font-weight: 600;
+            font-size: .95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            transition: background .2s;
+        }
+        .btn-cancel:hover { background: #e5e7eb; color: #111; }
+        .btn-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        /* ── Validation ── */
+        .field-validation-error { color: #ef4444; font-size: .8rem; }
+        .input-validation-error { border-color: #ef4444 !important; }
+    </style>
+}
+
+<div class="edit-wrapper">
+    <div class="edit-card">
+
+        <!-- Header -->
+        <div class="edit-card-header">
+            <h1><i class="fas fa-edit"></i> Edit Product</h1>
+            <p>@Model.Product.Name &nbsp;·&nbsp; ID #@Model.Product.ProductId</p>
+        </div>
+
+        <!-- Body -->
+        <div class="edit-card-body">
+            <form method="post">
+                <input type="hidden" asp-for="Product.ProductId" />
+
+                <!-- ── BASIC INFO ─────────────────────────────── -->
+                <p class="form-section-title"><i class="fas fa-info-circle me-1"></i>Basic Information</p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label asp-for="Product.Name" class="form-label">Product Name</label>
+                        <input asp-for="Product.Name" class="form-control" placeholder="Enter product name" />
+                        <span asp-validation-for="Product.Name" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Product.Unit" class="form-label">Unit</label>
+                        <input asp-for="Product.Unit" class="form-control" placeholder="e.g. Bottle, Box" />
+                        <span asp-validation-for="Product.Unit" class="field-validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Product.CategoryId" class="form-label">Category</label>
+                    <select asp-for="Product.CategoryId" asp-items="Model.CategoryItems" class="form-select">
+                        <option value="">— Select category —</option>
+                    </select>
+                    <span asp-validation-for="Product.CategoryId" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Product.ImageUrl" class="form-label">Image URL <span class="text-muted fw-normal">(optional)</span></label>
+                    <input asp-for="Product.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                    <span class="form-text">Leave blank to use the default placeholder image.</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <div class="status-toggle">
+                        <label class="status-option">
+                            <input type="radio" name="Product.Status" value="true" @(Model.Product.Status ? "checked" : "") />
+                            <span class="status-label active-lbl"><i class="fas fa-check-circle"></i> Active</span>
+                        </label>
+                        <label class="status-option">
+                            <input type="radio" name="Product.Status" value="false" @(!Model.Product.Status ? "checked" : "") />
+                            <span class="status-label inactive-lbl"><i class="fas fa-times-circle"></i> Inactive</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ── PRICING ─────────────────────────────────── -->
+                <p class="form-section-title"><i class="fas fa-tags me-1"></i>Pricing</p>
+
+                <div class="mb-2">
+                    <label asp-for="Product.PriceMultiplier" class="form-label">Price Multiplier</label>
+                    <input asp-for="Product.PriceMultiplier"
+                           id="priceMultiplierInput"
+                           class="form-control"
+                           type="number"
+                           step="0.01"
+                           min="0.01"
+                           placeholder="e.g. 1.50" />
+                    <span asp-validation-for="Product.PriceMultiplier" class="field-validation-error"></span>
+                    <p class="form-text">Selling Price = Import Price × Multiplier. Minimum 0.01.</p>
+                </div>
+
+                <!-- Live Price Preview Panel -->
+                @if (Model.AvgImportPrice > 0)
+                {
+                    <div class="price-preview" id="pricePreviewPanel">
+                        <div class="price-preview-title"><i class="fas fa-calculator me-1"></i>Price Preview</div>
+                        <div class="preview-row">
+                            <span class="preview-label">Average Import Price</span>
+                            <span class="preview-value" id="avgImportDisplay">
+                                @Model.AvgImportPrice.ToString("N0") ₫
+                            </span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">New Selling Price</span>
+                            <span class="preview-value highlight" id="newSellingDisplay">—</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="price-preview no-data" id="pricePreviewPanel">
+                        <div class="price-preview-title">Price Preview</div>
+                        <div class="preview-no-data">
+                            <i class="fas fa-exclamation-circle"></i>No import data available — preview unavailable.
+                        </div>
+                    </div>
+                }
+
+                <!-- ── ACTION BUTTONS ──────────────────────────── -->
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                    <a asp-page="/Products/Details" asp-route-id="@Model.Product.ProductId" class="btn-cancel">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+@{
+    /* Server-side values injected once at render time. */
+    var avgImportJs = Model.AvgImportPrice;
+}
+<script>
+    // ── Constants injected from the server ───────────────────────────────────
+    const avgImportPrice = @avgImportJs;   // 0 when no import data
+
+    // ── DOM references ───────────────────────────────────────────────────────
+    const multiplierInput  = document.getElementById('priceMultiplierInput');
+    const newSellingDisplay = document.getElementById('newSellingDisplay');
+
+    // ── Formatter (matches backend "N0" format) ──────────────────────────────
+    function formatVND(amount) {
+        return amount.toLocaleString('vi-VN') + ' ₫';
+    }
+
+    // ── Preview calculation (mirrors backend: importPrice * multiplier) ───────
+    function updatePreview() {
+        if (avgImportPrice <= 0 || !newSellingDisplay) return;
+
+        const multiplier = parseFloat(multiplierInput.value);
+        if (isNaN(multiplier) || multiplier <= 0) {
+            newSellingDisplay.textContent = '—';
+            return;
+        }
+
+        const newPrice = avgImportPrice * multiplier;
+        newSellingDisplay.textContent = formatVND(newPrice);
+    }
+
+    // ── Event listeners ───────────────────────────────────────────────────────
+    if (multiplierInput) {
+        multiplierInput.addEventListener('input', updatePreview);
+        // Trigger immediately so the panel shows on page load
+        updatePreview();
+    }
+
+    // ── Status radio visual update ────────────────────────────────────────────
+    document.querySelectorAll('input[name="Product.Status"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            document.querySelectorAll('.status-label').forEach(lbl => lbl.style.fontWeight = '');
+        });
+    });
+</script>
+<partial name="_ValidationScriptsPartial" />
+}

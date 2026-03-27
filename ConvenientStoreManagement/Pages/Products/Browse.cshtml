@@ -221,14 +221,23 @@
                                 @price.ToString("N0") <span class="currency">VNĐ</span>
                             </div>
 
-                            <button class="cart-btn"
-                                    id="cart-@item.ProductId"
-                                    title="@(inStock ? "Add to Cart" : "Out of Stock")"
-                                    @(inStock ? "" : "disabled")
-                                    onclick="addToCart(this, @item.ProductId, '@Html.Raw(item.Name.Replace("'", "\\'"))')">
-                                <i class="fas fa-plus"></i>
-                                <span>Add to Cart</span>
-                            </button>
+                            <div class="d-flex gap-1 align-items-center">
+                                <a asp-page="/Products/Details"
+                                   asp-route-id="@item.ProductId"
+                                   class="btn btn-sm btn-outline-secondary"
+                                   title="View Details"
+                                   style="border-radius:8px; height:36px; display:inline-flex; align-items:center; padding:0 .6rem;">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <button class="cart-btn"
+                                        id="cart-@item.ProductId"
+                                        title="@(inStock ? "Add to Cart" : "Out of Stock")"
+                                        @(inStock ? "" : "disabled")
+                                        onclick="addToCart(this, @item.ProductId, '@Html.Raw(item.Name.Replace("'", "\\'"))')">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Add to Cart</span>
+                                </button>
+                            </div>
                         </div>
 
                     </div>

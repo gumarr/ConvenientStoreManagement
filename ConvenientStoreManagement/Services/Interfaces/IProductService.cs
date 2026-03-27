@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using ConvenientStoreManagement.Models;
+using ConvenientStoreManagement.ViewModels;
 
 namespace ConvenientStoreManagement.Services.Interfaces
 {
@@ -13,5 +14,13 @@ namespace ConvenientStoreManagement.Services.Interfaces
         Task<List<Product>> GetProductsAsync(int? categoryId, string? searchString, int pageIndex, int pageSize);
         Task<int> GetTotalCountAsync(int? categoryId, string? searchString);
         Task<List<Category>> GetCategoriesAsync();
+
+        // Detail & pricing helpers
+        Task<ProductDetailDto?> GetProductDetailAsync(int productId);
+        Task<decimal> GetLatestImportPriceAsync(int productId);
+        decimal CalculateSellingPrice(decimal importPrice, decimal multiplier);
+
+        // Edit helpers
+        Task UpdateProductAsync(Product product);
     }
 }
