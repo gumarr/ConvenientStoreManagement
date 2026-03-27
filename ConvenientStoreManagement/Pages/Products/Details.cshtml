@@ -1,0 +1,342 @@
+@page
+@model ConvenientStoreManagement.Pages.Products.DetailsModel
+
+@{
+    ViewData["Title"] = "Product Details – " + Model.Detail.Product.Name;
+    var p = Model.Detail.Product;
+    string imageUrl = "/img/placeholder.png";
+    if (!string.IsNullOrWhiteSpace(p.ImageUrl))
+    {
+        imageUrl = p.ImageUrl.Replace("\\", "/");
+        if (!imageUrl.StartsWith("http") && !imageUrl.StartsWith("/"))
+            imageUrl = "/" + imageUrl;
+    }
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ── Layout ── */
+        .detail-wrapper {
+            max-width: 860px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* ── Header card ── */
+        .detail-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.09);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .detail-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 1.5rem 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .detail-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .detail-header p {
+            margin: .2rem 0 0;
+            opacity: .85;
+            font-size: .9rem;
+        }
+        .detail-header-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Body ── */
+        .detail-body {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 0;
+        }
+        @@media (max-width: 640px) {
+            .detail-body { grid-template-columns: 1fr; }
+        }
+
+        /* ── Image panel ── */
+        .detail-img-panel {
+            background: #f8fafc;
+            border-right: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+        .detail-img-panel img {
+            width: 160px;
+            height: 160px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* ── Info panel ── */
+        .detail-info {
+            padding: 2rem;
+        }
+
+        /* ── Section headings ── */
+        .info-section-title {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6366f1;
+            margin: 1.4rem 0 .7rem;
+        }
+        .info-section-title:first-child { margin-top: 0; }
+
+        /* ── Info rows ── */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .45rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label {
+            font-size: .875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .info-value {
+            font-size: .95rem;
+            font-weight: 600;
+            color: #111827;
+            text-align: right;
+        }
+
+        /* ── Pricing card ── */
+        .pricing-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #6ee7b7;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.2rem;
+        }
+        .pricing-card-title {
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #059669;
+            margin-bottom: .8rem;
+        }
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: .4rem 0;
+        }
+        .pricing-row + .pricing-row {
+            border-top: 1px solid rgba(0,0,0,.06);
+        }
+        .pricing-label {
+            font-size: .875rem;
+            color: #374151;
+            font-weight: 500;
+        }
+        .pricing-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        .pricing-value.highlight {
+            font-size: 1.1rem;
+            color: #6366f1;
+        }
+        .pricing-alert {
+            font-size: .85rem;
+            color: #9ca3af;
+            text-align: center;
+            padding: .35rem 0;
+        }
+        .pricing-alert i { margin-right: .35rem; }
+
+        /* ── Status badge ── */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .3rem .8rem;
+            border-radius: 999px;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        .badge-active {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1.5px solid #6ee7b7;
+        }
+        .badge-inactive {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1.5px solid #fca5a5;
+        }
+
+        /* ── Navigation buttons ── */
+        .detail-actions {
+            display: flex;
+            gap: .75rem;
+            margin-top: 1.5rem;
+        }
+        .btn-back {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 10px;
+            padding: .65rem 1.4rem;
+            font-weight: 600;
+            font-size: .9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            transition: background .2s;
+        }
+        .btn-back:hover { background: #e5e7eb; color: #111; }
+        .btn-edit {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: .65rem 1.4rem;
+            font-weight: 700;
+            font-size: .9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            transition: opacity .2s, transform .1s;
+        }
+        .btn-edit:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+    </style>
+}
+
+<div class="detail-wrapper">
+
+    <!-- ── Main card ── -->
+    <div class="detail-card">
+
+        <!-- Header -->
+        <div class="detail-header">
+            <div class="detail-header-icon"><i class="fas fa-box"></i></div>
+            <div>
+                <h1>@p.Name</h1>
+                <p>Product ID #@p.ProductId &nbsp;·&nbsp; @(p.Category?.Name ?? "Uncategorized")</p>
+            </div>
+        </div>
+
+        <!-- Body: image + info -->
+        <div class="detail-body">
+
+            <!-- Image -->
+            <div class="detail-img-panel">
+                <img src="@imageUrl"
+                     onerror="this.src='/img/placeholder.png'"
+                     alt="@p.Name" />
+            </div>
+
+            <!-- Info -->
+            <div class="detail-info">
+
+                <!-- Basic Info -->
+                <p class="info-section-title"><i class="fas fa-info-circle me-1"></i>Basic Information</p>
+
+                <div class="info-row">
+                    <span class="info-label">Category</span>
+                    <span class="info-value">@(p.Category?.Name ?? "—")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Unit</span>
+                    <span class="info-value">@(string.IsNullOrWhiteSpace(p.Unit) ? "—" : p.Unit)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Stock</span>
+                    <span class="info-value">@p.Stock</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">
+                        @if (p.Status)
+                        {
+                            <span class="badge-status badge-active"><i class="fas fa-check-circle"></i>Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge-status badge-inactive"><i class="fas fa-times-circle"></i>Inactive</span>
+                        }
+                    </span>
+                </div>
+
+                <!-- Pricing Info -->
+                <p class="info-section-title"><i class="fas fa-tags me-1"></i>Pricing</p>
+
+                <div class="info-row">
+                    <span class="info-label">Price Multiplier</span>
+                    <span class="info-value">×&thinsp;@p.PriceMultiplier.ToString("0.##")</span>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-card-title"><i class="fas fa-chart-line me-1"></i>Price Summary</div>
+
+                    <!-- Average Import Price -->
+                    <div class="pricing-row">
+                        <span class="pricing-label">Average Import Price</span>
+                        @if (Model.Detail.HasImportData)
+                        {
+                            <span class="pricing-value">@Model.Detail.AvgImportPrice.ToString("N0") ₫</span>
+                        }
+                        else
+                        {
+                            <span class="pricing-alert"><i class="fas fa-exclamation-circle"></i>No import data available</span>
+                        }
+                    </div>
+
+                    <!-- Current Selling Price -->
+                    <div class="pricing-row">
+                        <span class="pricing-label">Current Selling Price</span>
+                        @if (Model.Detail.HasActivePrice)
+                        {
+                            <span class="pricing-value highlight">@Model.Detail.CurrentSellingPrice!.Value.ToString("N0") ₫</span>
+                        }
+                        else
+                        {
+                            <span class="pricing-alert"><i class="fas fa-exclamation-circle"></i>No active selling price</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div class="detail-actions">
+                    <a asp-page="/Products/Browse" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Product List
+                    </a>
+                    <a asp-page="/Products/Edit" asp-route-id="@p.ProductId" class="btn-edit">
+                        <i class="fas fa-edit"></i> Edit Product
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
