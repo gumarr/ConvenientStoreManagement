@@ -13,13 +13,6 @@ namespace ConvenientStoreManagement.Models
         [StringLength(200)]
         public string Name { get; set; }
 
-        [StringLength(500)]
-        public string? ShortDescription { get; set; }
-
-        [Required]
-        [Column(TypeName = "decimal(18, 2)")]
-        public decimal Price { get; set; }
-
         [Required]
         [StringLength(50)]
         public string Unit { get; set; }

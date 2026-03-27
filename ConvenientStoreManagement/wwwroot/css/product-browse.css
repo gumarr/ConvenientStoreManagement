@@ -213,10 +213,6 @@ body {
     min-width: 0;
 }
 
-.browse-cart-panel.sticky-top {
-    z-index: 990;
-}
-
 /* Top bar */
 .main-topbar {
     display: flex;

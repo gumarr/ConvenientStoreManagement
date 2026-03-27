@@ -56,3 +56,12 @@ button.accept-policy { font-size: 1rem; line-height: inherit; }
   font-weight: 500;
   transition: background .15s;
 }
+
+.navbar-clean {
+  position: relative;
+  z-index: 1100;
+}
+
+#userDropdown + .dropdown-menu {
+  z-index: 1200;
+}
