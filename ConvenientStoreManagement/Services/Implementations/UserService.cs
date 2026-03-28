@@ -88,8 +88,9 @@ namespace ConvenientStoreManagement.Services.Implementations
                 user.Password = input.Password;
             }
 
-            _context.Users.Update(user);
-            return await _context.SaveChangesAsync() > 0;
+            // EF Core will automatically track the changes
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> DeleteUserAsync(int id)
