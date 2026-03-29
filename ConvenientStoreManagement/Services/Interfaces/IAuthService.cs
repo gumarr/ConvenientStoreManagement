@@ -12,16 +12,18 @@ namespace ConvenientStoreManagement.Services.Interfaces
         /// </summary>
         string GeneratePasswordResetToken();
 
-    /// <summary>
-    /// Tìm user theo email và sinh token reset password, lưu vào DB
-    /// Trả về token nếu thành công, null nếu không tìm thấy user
-    /// </summary>
-    Task<string?> GenerateResetTokenAsync(string email);
+        /// <summary>
+        /// Tìm user theo email và sinh token reset password, lưu vào DB
+        /// Trả về token nếu thành công, null nếu không tìm thấy user
+        /// </summary>
+        Task<string?> GenerateResetTokenAsync(string email);
 
-    /// <summary>
-    /// Kiểm tra token hợp lệ (tồn tại, chưa hết hạn)
-    /// </summary>
-    Task<User?> ValidateResetTokenAsync(string token);        /// <summary>
+        /// <summary>
+        /// Kiểm tra token hợp lệ (tồn tại, chưa hết hạn)
+        /// </summary>
+        Task<User?> ValidateResetTokenAsync(string token);
+
+        /// <summary>
         /// Reset mật khẩu mới cho user
         /// </summary>
         Task<bool> ResetPasswordAsync(string token, string newPassword);

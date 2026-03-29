@@ -108,9 +108,8 @@ namespace ConvenientStoreManagement.Services.Implementations
                 if (user == null)
                     return false;
 
-                // Hash password mới
-                var hashedPassword = HashPassword(newPassword);
-                user.Password = hashedPassword;
+                // Lưu password mới không hash
+                user.Password = newPassword;
                 user.PasswordResetToken = null;
                 user.PasswordResetTokenExpiry = null;
 
