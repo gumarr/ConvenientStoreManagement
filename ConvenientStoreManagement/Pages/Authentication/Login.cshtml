@@ -35,6 +35,9 @@
                 <input asp-for="Input.Password" class="form-control" type="password"
                        placeholder="Enter your password" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
+                <div class="text-end mt-2">
+                    <a href="/Authentication/ForgotPassword" class="text-decoration-none small">Quên mật khẩu?</a>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Login</button>

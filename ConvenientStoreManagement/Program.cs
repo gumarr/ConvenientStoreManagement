@@ -21,6 +21,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IMemberCardService, MemberCardService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IAIService, GeminiService>();
 builder.Services.AddScoped<IAIRecommendationService, AIRecommendationService>();
 
