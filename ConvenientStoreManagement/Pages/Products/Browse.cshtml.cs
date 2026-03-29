@@ -50,7 +50,7 @@ namespace ConvenientStoreManagement.Pages.Products
         {
             if (payload == null || payload.Items == null || payload.Items.Count == 0)
             {
-                return new JsonResult(new { success = false, message = "Giỏ hàng trống hoặc dữ liệu không hợp lệ." });
+                return new JsonResult(new { success = false, message = "Cart is empty or invalid data." });
             }
 
             try
@@ -61,10 +61,10 @@ namespace ConvenientStoreManagement.Pages.Products
                 
                 if (result)
                 {
-                    return new JsonResult(new { success = true, message = "Thanh toán thành công!" });
+                    return new JsonResult(new { success = true, message = "Checkout successful!" });
                 }
                 
-                return new JsonResult(new { success = false, message = "Thanh toán thất bại, vui lòng thử lại." });
+                return new JsonResult(new { success = false, message = "Checkout failed, please try again." });
             }
             catch (Exception ex)
             {
@@ -81,7 +81,7 @@ namespace ConvenientStoreManagement.Pages.Products
             {
                 if (string.IsNullOrWhiteSpace(request?.PhoneNumber))
                 {
-                    return new JsonResult(new { success = false, message = "Vui lòng nhập số điện thoại." });
+                    return new JsonResult(new { success = false, message = "Please enter phone number." });
                 }
 
                 var member = await _memberCardService.GetMemberByPhoneAsync(request.PhoneNumber);
@@ -91,7 +91,7 @@ namespace ConvenientStoreManagement.Pages.Products
                     return new JsonResult(new { success = true, member = new { member.MemberCardId, member.FullName, member.PhoneNumber, member.LoyaltyPoints } });
                 }
 
-                return new JsonResult(new { success = false, message = "Không tìm thấy thẻ thành viên." });
+                return new JsonResult(new { success = false, message = "Member card not found." });
             }
             catch (Exception ex)
             {
@@ -108,17 +108,17 @@ namespace ConvenientStoreManagement.Pages.Products
             {
                 if (string.IsNullOrWhiteSpace(request?.FullName) || string.IsNullOrWhiteSpace(request?.PhoneNumber))
                 {
-                    return new JsonResult(new { success = false, message = "Vui lòng nhập đầy đủ thông tin (tên và số điện thoại)." });
+                    return new JsonResult(new { success = false, message = "Please enter full info (name and phone)." });
                 }
 
                 var newMember = await _memberCardService.CreateMemberAsync(request.FullName, request.PhoneNumber, request.Email);
                 
                 if (newMember != null)
                 {
-                    return new JsonResult(new { success = true, message = "Tạo thẻ thành viên thành công!", member = new { newMember.MemberCardId, newMember.FullName, newMember.PhoneNumber, newMember.LoyaltyPoints } });
+                    return new JsonResult(new { success = true, message = "Member card created successfully!", member = new { newMember.MemberCardId, newMember.FullName, newMember.PhoneNumber, newMember.LoyaltyPoints } });
                 }
 
-                return new JsonResult(new { success = false, message = "Không thể tạo thẻ thành viên (số điện thoại đã tồn tại?)." });
+                return new JsonResult(new { success = false, message = "Cannot create member card (phone already exists?)." });
             }
             catch (Exception ex)
             {

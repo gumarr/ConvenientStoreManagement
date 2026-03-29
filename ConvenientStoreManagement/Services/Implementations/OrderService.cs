@@ -106,9 +106,35 @@ namespace ConvenientStoreManagement.Services.Implementations
                     _context.DailySummaryStats.Add(summaryStats);
                 }
 
+                // Prepare for discount distribution
+                decimal totalBeforeDiscount = subtotal;
+                decimal totalDiscountAllowed = loyaltyPointsUsed;
+                decimal remainingDiscount = totalDiscountAllowed;
+                int count = 0;
+                int totalItems = model.Items.Count;
+
                 // 2. Insert into OrderDetails, Update Stock, and Update Stats
                 foreach (var item in model.Items)
                 {
+                    count++;
+                    decimal itemTotal = item.UnitPrice * item.Quantity;
+                    
+                    // Distribute discount proportionally
+                    decimal itemDiscount = 0;
+                    if (totalBeforeDiscount > 0 && totalDiscountAllowed > 0)
+                    {
+                        if (count == totalItems)
+                        {
+                            // Last item absorbs the remaining rounding difference
+                            itemDiscount = remainingDiscount;
+                        }
+                        else
+                        {
+                            decimal ratio = itemTotal / totalBeforeDiscount;
+                            itemDiscount = Math.Round(totalDiscountAllowed * ratio, 2);
+                            remainingDiscount -= itemDiscount;
+                        }
+                    }
                     // Look up current average import price
                     decimal currentImportPrice = await _pricingService.GetCurrentImportPriceAsync(item.ProductId);
 
@@ -118,13 +144,13 @@ namespace ConvenientStoreManagement.Services.Implementations
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice,
-                        DiscountApplied = item.DiscountApplied,
+                        DiscountApplied = itemDiscount,
                         ImportCostSnapshot = currentImportPrice
                     };
                     _context.OrderDetails.Add(orderDetail);
 
                     // Stats calculation
-                    decimal lineRevenue = (item.UnitPrice * item.Quantity) - item.DiscountApplied;
+                    decimal lineRevenue = (item.UnitPrice * item.Quantity) - itemDiscount;
                     decimal lineCost = currentImportPrice * item.Quantity;
                     decimal lineProfit = lineRevenue - lineCost;
 
