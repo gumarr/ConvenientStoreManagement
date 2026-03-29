@@ -88,7 +88,7 @@ namespace ConvenientStoreManagement.Pages.Products
                 
                 if (member != null)
                 {
-                    return new JsonResult(new { success = true, member = new { member.MemberCardId, member.FullName, member.LoyaltyPoints } });
+                    return new JsonResult(new { success = true, member = new { member.MemberCardId, member.FullName, member.PhoneNumber, member.LoyaltyPoints } });
                 }
 
                 return new JsonResult(new { success = false, message = "Không tìm thấy thẻ thành viên." });
@@ -115,7 +115,7 @@ namespace ConvenientStoreManagement.Pages.Products
                 
                 if (newMember != null)
                 {
-                    return new JsonResult(new { success = true, message = "Tạo thẻ thành viên thành công!", member = new { newMember.MemberCardId, newMember.FullName, newMember.LoyaltyPoints } });
+                    return new JsonResult(new { success = true, message = "Tạo thẻ thành viên thành công!", member = new { newMember.MemberCardId, newMember.FullName, newMember.PhoneNumber, newMember.LoyaltyPoints } });
                 }
 
                 return new JsonResult(new { success = false, message = "Không thể tạo thẻ thành viên (số điện thoại đã tồn tại?)." });
