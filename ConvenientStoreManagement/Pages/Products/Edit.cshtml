@@ -210,7 +210,7 @@
 
         <!-- Body -->
         <div class="edit-card-body">
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="Product.ProductId" />
 
                 <!-- ── BASIC INFO ─────────────────────────────── -->
@@ -238,9 +238,17 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Product.ImageUrl" class="form-label">Image URL <span class="text-muted fw-normal">(optional)</span></label>
-                    <input asp-for="Product.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
-                    <span class="form-text">Leave blank to use the default placeholder image.</span>
+                    <label asp-for="ImageFile" class="form-label">Product Image <span class="text-muted fw-normal">(optional)</span></label>
+                    <input asp-for="ImageFile" type="file" class="form-control" accept=".jpg,.png,.jpeg,.webp" />
+                    <span asp-validation-for="ImageFile" class="field-validation-error"></span>
+                    <span class="form-text">Max 3MB. Formats: .jpg, .png, .jpeg, .webp.</span>
+                    @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                    {
+                        <div class="mt-2">
+                            <p class="form-text mb-1">Current Image:</p>
+                            <img src="@Model.Product.ImageUrl" alt="Current Image" style="max-height: 100px; border-radius: 8px; border: 1px solid #e5e7eb;" />
+                        </div>
+                    }
                 </div>
 
                 <div class="mb-3">
