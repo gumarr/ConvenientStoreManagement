@@ -25,5 +25,13 @@ namespace ConvenientStoreManagement.Models
 
         [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalProfit { get; set; } = 0;
+
+        public int? CreatedBy { get; set; }
+        
+        [ForeignKey("CreatedBy")]
+        public User CreatedByUser { get; set; }
+
+        [StringLength(50)]
+        public string Source { get; set; }
     }
 }

@@ -65,7 +65,12 @@ namespace ConvenientStoreManagement.Services.Implementations
 
                 if (summaryStats == null)
                 {
-                    summaryStats = new DailySummaryStats { Date = today };
+                    summaryStats = new DailySummaryStats 
+                    { 
+                        Date = today,
+                        CreatedBy = cashierUserId,
+                        Source = "Auto"
+                    };
                     _context.DailySummaryStats.Add(summaryStats);
                 }
 

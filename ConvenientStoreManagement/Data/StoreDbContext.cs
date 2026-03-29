@@ -107,10 +107,24 @@ namespace ConvenientStoreManagement.Data
                 entity.HasIndex(e => new { e.ProductId, e.Date }).IsUnique();
             });
 
-            // Configure DailySummaryStats — unique Date index
+            // Configure DailySummaryStats — unique Date index and foreign key
             modelBuilder.Entity<DailySummaryStats>(entity =>
             {
                 entity.HasIndex(e => e.Date).IsUnique();
+                
+                entity.HasOne(e => e.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure AIRecommendations
+            modelBuilder.Entity<AIRecommendation>(entity =>
+            {
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }
