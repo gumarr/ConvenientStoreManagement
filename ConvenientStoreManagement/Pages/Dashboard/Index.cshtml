@@ -11,10 +11,16 @@
 <!-- ================= SUMMARY ================= -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white shadow-sm border-0">
+        <div class="card bg-primary text-white shadow-sm border-0 position-relative">
             <div class="card-body">
                 <h6>Today Revenue</h6>
-                <h3>@Model.Stats.TodayRevenue.ToString(format: "N0") ₫</h3>
+                <h3>@Model.Stats.TodayRevenue.ToString("N0") ₫</h3>
+                @if (!string.IsNullOrEmpty(Model.Stats.TodayStatsSource)) {
+                    <span class="position-absolute top-0 end-0 badge bg-light text-dark m-2">Source: @Model.Stats.TodayStatsSource</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Stats.TodayStatsCreatedBy)) {
+                    <small class="d-block mt-2 opacity-75">By: @Model.Stats.TodayStatsCreatedBy</small>
+                }
             </div>
         </div>
     </div>
@@ -23,7 +29,7 @@
         <div class="card bg-success text-white shadow-sm border-0">
             <div class="card-body">
                 <h6>Today Profit</h6>
-                <h3>@Model.Stats.TodayProfit.ToString(format: "N0") ₫</h3>
+                <h3>@Model.Stats.TodayProfit.ToString("N0") ₫</h3>
             </div>
         </div>
     </div>
@@ -32,7 +38,7 @@
         <div class="card bg-info text-white shadow-sm border-0">
             <div class="card-body">
                 <h6>This Week Revenue</h6>
-                <h3>@Model.Stats.ThisWeekRevenue.ToString(format: "N0") ₫</h3>
+                <h3>@Model.Stats.ThisWeekRevenue.ToString("N0") ₫</h3>
             </div>
         </div>
     </div>
@@ -41,7 +47,7 @@
         <div class="card bg-warning shadow-sm border-0">
             <div class="card-body">
                 <h6>This Month Revenue</h6>
-                <h3>@Model.Stats.ThisMonthRevenue.ToString(format: "N0") ₫</h3>
+                <h3>@Model.Stats.ThisMonthRevenue.ToString("N0") ₫</h3>
             </div>
         </div>
     </div>
@@ -96,14 +102,20 @@
     <button class="btn btn-dark mb-3">🤖 AI Suggest</button>
 </form>
 
-@if (!string.IsNullOrEmpty(Model.AIResult))
+@if (Model.AIResult != null && !string.IsNullOrEmpty(Model.AIResult.Content))
 {
     <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">
-            AI Suggestion
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span>AI Suggestion</span>
+            @if (Model.AIResult.User != null)
+            {
+                <small class="badge bg-secondary">
+                    Requested by: @Model.AIResult.User.FullName - @Model.AIResult.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </small>
+            }
         </div>
         <div class="card-body">
-            @Html.Raw(Model.AIResult.Replace(oldValue: "\n", newValue: "<br/>"))
+            @Html.Raw(Model.AIResult.Content.Replace("\n", "<br/>"))
         </div>
     </div>
 }

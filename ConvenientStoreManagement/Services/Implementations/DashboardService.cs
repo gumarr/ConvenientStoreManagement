@@ -24,10 +24,13 @@ namespace ConvenientStoreManagement.Services.Implementations
             
             // 1. Summary Cards
             var todayStats = await _context.DailySummaryStats
+                .Include(s => s.CreatedByUser)
                 .FirstOrDefaultAsync(s => s.Date == today);
                 
             var todayRevenue = todayStats?.TotalRevenue ?? 0;
             var todayProfit = todayStats?.TotalProfit ?? 0;
+            var todaySource = todayStats?.Source;
+            var todayCreatedBy = todayStats?.CreatedByUser?.FullName;
 
             // This Week (last 7 days including today)
             var weekStart = today.AddDays(-6);
@@ -95,6 +98,8 @@ namespace ConvenientStoreManagement.Services.Implementations
                 TodayProfit = todayProfit,
                 ThisWeekRevenue = thisWeekRevenue,
                 ThisMonthRevenue = thisMonthRevenue,
+                TodayStatsSource = todaySource,
+                TodayStatsCreatedBy = todayCreatedBy,
                 ChartLabels = labels,
                 ChartRevenue = chartRev,
                 ChartProfit = chartProf,

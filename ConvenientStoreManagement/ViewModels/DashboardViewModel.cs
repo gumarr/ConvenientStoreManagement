@@ -10,6 +10,9 @@ namespace ConvenientStoreManagement.ViewModels
         public decimal ThisWeekRevenue { get; set; }
         public decimal ThisMonthRevenue { get; set; }
 
+        public string TodayStatsSource { get; set; }
+        public string TodayStatsCreatedBy { get; set; }
+
         public int LowStockProductCount { get; set; }
 
         // Chart Data: Last 30 days

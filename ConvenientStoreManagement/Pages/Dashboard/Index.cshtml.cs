@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
+using System.Security.Claims;
+using ConvenientStoreManagement.Models;
+
 namespace ConvenientStoreManagement.Pages.Dashboard
 {
     public static class AIFormatter
@@ -28,7 +31,7 @@ namespace ConvenientStoreManagement.Pages.Dashboard
         private readonly IStatsService _statsService;
         private readonly IAIRecommendationService _aiRecommendationService;
 
-        public string AIResult { get; set; }
+        public AIRecommendation AIResult { get; set; }
 
         public DashboardViewModel Stats { get; set; } = new();
         public StatsDto ExtraStats { get; set; } = new();
@@ -53,7 +56,14 @@ namespace ConvenientStoreManagement.Pages.Dashboard
         {
             Stats = await _dashboardService.GetDashboardStatsAsync();
 
-            AIResult = await _aiRecommendationService.GetOrCreateAIAsync();
+            int? userId = null;
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdClaim, out int parsedId))
+            {
+                userId = parsedId;
+            }
+
+            AIResult = await _aiRecommendationService.GetOrCreateAIAsync(userId);
 
             return Page();
         }
