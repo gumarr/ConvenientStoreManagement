@@ -37,6 +37,13 @@ namespace ConvenientStoreManagement.Models
         [StringLength(50)]
         public string Role { get; set; } // Admin / Staff
 
+        /// <summary>Token dùng để reset mật khẩu - lưu 1 lần duy nhất.</summary>
+        [StringLength(256)]
+        public string? PasswordResetToken { get; set; }
+
+        /// <summary>Thời hạn hiệu lực của reset token (thường 1 giờ).</summary>
+        public DateTime? PasswordResetTokenExpiry { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
