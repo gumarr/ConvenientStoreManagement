@@ -318,6 +318,56 @@
                     <h4 class="border-bottom pb-3 mb-4 fw-bold text-primary">
                         <i class="fas fa-shopping-cart me-2"></i> POS Giỏ Hàng
                     </h4>
+
+                    <!-- ═══════════════════════════════════════════
+                         MEMBER SEARCH SECTION
+                    ═══════════════════════════════════════════ -->
+                    <div class="member-section mb-4 p-3 border rounded-3 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent !important;">
+                        <h6 class="text-white fw-bold mb-3">
+                            <i class="fas fa-id-card me-2"></i> Thẻ Thành Viên
+                        </h6>
+
+                        <!-- Current Member Info -->
+                        <div id="memberInfo" class="mb-3 p-2 rounded bg-white" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold text-dark" id="memberName">-</div>
+                                    <div class="small text-muted" id="memberPhone">SĐT: -</div>
+                                    <div class="text-primary fw-semibold" id="memberPoints">Điểm: 0</div>
+                                </div>
+                                <button class="btn btn-sm btn-light" onclick="clearMember()" title="Xóa">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div class="input-group mb-2" style="gap: 5px;">
+                            <input type="tel" id="searchMemberPhone" class="form-control form-control-sm" 
+                                   placeholder="Nhập SĐT khách..." autocomplete="off" />
+                            <button class="btn btn-sm btn-light fw-bold" onclick="searchMember()" title="Tìm kiếm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <!-- Create Member Button -->
+                        <button class="btn btn-sm btn-light w-100 fw-bold" onclick="openCreateMemberModal()">
+                            <i class="fas fa-user-plus me-1"></i> Tạo Thành Viên Mới
+                        </button>
+
+                        <!-- Loading Spinner -->
+                        <div id="memberLoadingSpinner" class="text-center text-white mt-2" style="display: none;">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+
+                        <!-- Error/Success Message -->
+                        <div id="memberMessage" class="alert mt-2 mb-0 py-2" style="display: none; font-size: 0.85rem;"></div>
+                    </div>
+
+                    <!-- Separator -->
+                    <hr class="my-3" />
                     
                     <!-- Danh sách items -->
                     <div id="cartItems" class="mb-4" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
@@ -329,10 +379,16 @@
 
                     <hr class="text-secondary mb-4" />
 
-                    <!-- Box khuyến mãi -->
-                    <div class="input-group mb-4">
-                        <input type="text" id="promoCode" class="form-control" placeholder="Mã khuyến mãi...">
-                        <button class="btn btn-outline-secondary fw-bold" onclick="applyPromo()">Áp dụng</button>
+                    <!-- Box sử dụng điểm tích lũy -->
+                    <div class="mb-4">
+                        <label for="loyaltyPointsToUse" class="form-label fw-semibold">
+                            <i class="fas fa-star text-warning me-2"></i>Sử Dụng Điểm Tích Lũy
+                        </label>
+                        <div class="input-group">
+                            <input type="number" id="loyaltyPointsToUse" class="form-control" placeholder="Nhập số điểm (1:1 VNĐ)" min="0" value="0" onchange="updatePointsDiscount()">
+                            <button class="btn btn-outline-warning fw-bold" onclick="applyLoyaltyPoints()">Áp dụng</button>
+                        </div>
+                        <small id="pointsAvailable" class="text-muted d-block mt-2">Điểm khả dụng: <strong id="availablePoints">0</strong></small>
                     </div>
 
                     <!-- Tổng tiền -->
@@ -341,9 +397,9 @@
                             <span>Tạm tính:</span>
                             <strong id="cartSubtotal" class="text-dark">0 VNĐ</strong>
                         </div>
-                        <div class="d-flex justify-content-between mb-3 text-muted">
-                            <span>Chiết khấu:</span>
-                            <strong id="cartDiscount" class="text-success">0 VNĐ</strong>
+                        <div class="d-flex justify-content-between mb-3 text-muted" id="pointsDiscountRow" style="display: none;">
+                            <span>Trừ điểm tích lũy:</span>
+                            <strong id="cartPointsDiscount" class="text-success">0 VNĐ</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center border-top pt-3">
                             <span class="fs-5 fw-bold text-dark">Tổng cộng:</span>
@@ -359,6 +415,45 @@
 
         </div> <!-- /row -->
     </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MODAL: CREATE NEW MEMBER
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="createMemberModal" tabindex="-1" aria-labelledby="createMemberLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="createMemberLabel">
+                    <i class="fas fa-user-plus me-2"></i> Tạo Thẻ Thành Viên Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createMemberForm">
+                    <div class="mb-3">
+                        <label for="newMemberName" class="form-label fw-semibold">Tên Khách Hàng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newMemberName" placeholder="Nhập tên..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="newMemberPhone" class="form-label fw-semibold">Số Điện Thoại <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="newMemberPhone" placeholder="Nhập SĐT..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="newMemberEmail" class="form-label fw-semibold">Email <span class="text-muted">(Tùy chọn)</span></label>
+                        <input type="email" class="form-control" id="newMemberEmail" placeholder="Nhập email..." />
+                    </div>
+                    <div id="createMemberError" class="alert alert-danger" style="display: none; margin-bottom: 0;"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary fw-bold" onclick="confirmCreateMember()">
+                    <i class="fas fa-check me-1"></i> Tạo Thành Viên
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -388,7 +483,8 @@ document.querySelectorAll('.sort-link').forEach(btn => {
    Cart State and Logic
 ───────────────────────────────────────────────────────────── */
 let cart = [];
-let discountAmount = 0;
+let loyaltyPointsToUse = 0;
+let currentMemberPoints = 0;
 
 function addToCart(btn, productId, name) {
     if (btn.disabled) return;
@@ -437,14 +533,32 @@ function updateQuantity(productId, change) {
     }
 }
 
-function applyPromo() {
-    const code = document.getElementById('promoCode').value.trim();
-    if (code === 'DISCOUNT10') {
-        discountAmount = 10000;
-        alert('Áp dụng mã thành công: Giảm 10,000đ!');
+function applyLoyaltyPoints() {
+    const points = parseFloat(document.getElementById('loyaltyPointsToUse').value) || 0;
+    
+    if (points < 0) {
+        alert('Số điểm không hợp lệ!');
+        return;
+    }
+    
+    if (points > currentMemberPoints) {
+        alert(`Điểm không đủ! Bạn chỉ có ${currentMemberPoints} điểm.`);
+        document.getElementById('loyaltyPointsToUse').value = currentMemberPoints;
+        loyaltyPointsToUse = currentMemberPoints;
     } else {
-        discountAmount = 0;
-        alert('Mã không hợp lệ!');
+        loyaltyPointsToUse = points;
+    }
+    
+    renderCart();
+}
+
+function updatePointsDiscount() {
+    const points = parseFloat(document.getElementById('loyaltyPointsToUse').value) || 0;
+    if (points > currentMemberPoints) {
+        document.getElementById('loyaltyPointsToUse').value = currentMemberPoints;
+        loyaltyPointsToUse = currentMemberPoints;
+    } else {
+        loyaltyPointsToUse = Math.max(0, points);
     }
     renderCart();
 }
@@ -456,7 +570,8 @@ function renderCart() {
     if (cart.length === 0) {
         cartContainer.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-box-open fs-1 text-light mb-3"></i><p class="mb-0">Giỏ hàng đang trống!</p></div>';
         document.getElementById('cartSubtotal').textContent = '0 VNĐ';
-        document.getElementById('cartDiscount').textContent = '0 VNĐ';
+        document.getElementById('cartPointsDiscount').textContent = '0 VNĐ';
+        document.getElementById('pointsDiscountRow').style.display = 'none';
         document.getElementById('cartTotal').textContent = '0 VNĐ';
         return;
     }
@@ -480,13 +595,153 @@ function renderCart() {
             </div>`;
     });
 
-    const total = subtotal - discountAmount;
+    const total = subtotal - loyaltyPointsToUse;
     
     document.getElementById('cartSubtotal').textContent = subtotal.toLocaleString() + ' VNĐ';
-    document.getElementById('cartDiscount').textContent = '-' + discountAmount.toLocaleString() + ' VNĐ';
+    
+    if (loyaltyPointsToUse > 0) {
+        document.getElementById('pointsDiscountRow').style.display = 'flex';
+        document.getElementById('cartPointsDiscount').textContent = '-' + loyaltyPointsToUse.toLocaleString() + ' VNĐ';
+    } else {
+        document.getElementById('pointsDiscountRow').style.display = 'none';
+    }
+    
     document.getElementById('cartTotal').textContent = Math.max(0, total).toLocaleString() + ' VNĐ';
 }
 
+/* ─────────────────────────────────────────────────────────────
+   MEMBER CARD FUNCTIONS
+───────────────────────────────────────────────────────────── */
+let currentMember = null;
+
+function showMemberMessage(message, type = 'danger') {
+    const msgEl = document.getElementById('memberMessage');
+    msgEl.textContent = message;
+    msgEl.className = `alert alert-${type} mt-2 mb-0 py-2`;
+    msgEl.style.display = 'block';
+    setTimeout(() => {
+        msgEl.style.display = 'none';
+    }, 4000);
+}
+
+function searchMember() {
+    const phoneNumber = document.getElementById('searchMemberPhone').value.trim();
+    
+    if (!phoneNumber) {
+        showMemberMessage('Vui lòng nhập số điện thoại!', 'warning');
+        return;
+    }
+
+    const spinner = document.getElementById('memberLoadingSpinner');
+    spinner.style.display = 'block';
+
+    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+
+    fetch('?handler=SearchMember', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify({ phoneNumber: phoneNumber })
+    })
+    .then(r => r.json())
+    .then(data => {
+        spinner.style.display = 'none';
+        
+        if (data.success) {
+            currentMember = data.member;
+            displayMemberInfo();
+            showMemberMessage('Tìm thấy thành viên!', 'success');
+        } else {
+            showMemberMessage(data.message, 'warning');
+        }
+    })
+    .catch(err => {
+        spinner.style.display = 'none';
+        showMemberMessage('Lỗi kết nối: ' + err, 'danger');
+    });
+}
+
+function displayMemberInfo() {
+    if (!currentMember) return;
+
+    document.getElementById('memberName').textContent = currentMember.fullName;
+    document.getElementById('memberPhone').textContent = `SĐT: ${currentMember.phoneNumber || '-'}`;
+    document.getElementById('memberPoints').textContent = `Điểm: ${parseFloat(currentMember.loyaltyPoints).toLocaleString()}`;
+    document.getElementById('availablePoints').textContent = parseFloat(currentMember.loyaltyPoints).toLocaleString();
+    document.getElementById('memberInfo').style.display = 'block';
+    document.getElementById('searchMemberPhone').value = '';
+    
+    // Cập nhật điểm khả dụng
+    currentMemberPoints = parseFloat(currentMember.loyaltyPoints) || 0;
+    document.getElementById('loyaltyPointsToUse').max = currentMemberPoints;
+}
+
+function clearMember() {
+    currentMember = null;
+    currentMemberPoints = 0;
+    loyaltyPointsToUse = 0;
+    document.getElementById('memberInfo').style.display = 'none';
+    document.getElementById('loyaltyPointsToUse').value = 0;
+    document.getElementById('availablePoints').textContent = '0';
+    document.getElementById('searchMemberPhone').value = '';
+    renderCart();
+}
+
+function openCreateMemberModal() {
+    const modal = new bootstrap.Modal(document.getElementById('createMemberModal'), {});
+    document.getElementById('createMemberForm').reset();
+    document.getElementById('createMemberError').style.display = 'none';
+    modal.show();
+}
+
+function confirmCreateMember() {
+    const fullName = document.getElementById('newMemberName').value.trim();
+    const phoneNumber = document.getElementById('newMemberPhone').value.trim();
+    const email = document.getElementById('newMemberEmail').value.trim();
+
+    if (!fullName || !phoneNumber) {
+        document.getElementById('createMemberError').textContent = 'Vui lòng nhập đầy đủ tên và SĐT!';
+        document.getElementById('createMemberError').style.display = 'block';
+        return;
+    }
+
+    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+
+    fetch('?handler=CreateMember', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify({ 
+            fullName: fullName, 
+            phoneNumber: phoneNumber,
+            email: email || null
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentMember = data.member;
+            displayMemberInfo();
+            bootstrap.Modal.getInstance(document.getElementById('createMemberModal')).hide();
+            showMemberMessage(data.message, 'success');
+        } else {
+            document.getElementById('createMemberError').textContent = data.message;
+            document.getElementById('createMemberError').style.display = 'block';
+        }
+    })
+    .catch(err => {
+        document.getElementById('createMemberError').textContent = 'Lỗi kết nối: ' + err;
+        document.getElementById('createMemberError').style.display = 'block';
+    });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CHECKOUT WITH MEMBER
+───────────────────────────────────────────────────────────── */
 function checkout() {
     if (cart.length === 0) {
         alert('Giỏ hàng chưa có sản phẩm!');
@@ -495,17 +750,21 @@ function checkout() {
 
     let subtotal = 0;
     cart.forEach(item => subtotal += item.unitPrice * item.quantity);
-    const totalAmount = Math.max(0, subtotal - discountAmount);
+    const totalAmount = Math.max(0, subtotal - loyaltyPointsToUse);
 
-    let discountPerItem = cart.length > 0 ? (discountAmount / cart.length) : 0;
+    // Không cộng thêm discount vì không còn mã giảm giá
     const checkoutItems = cart.map(item => ({
         ProductId: item.productId,
         Quantity: item.quantity,
         UnitPrice: item.unitPrice,
-        DiscountApplied: discountPerItem
+        DiscountApplied: 0
     }));
 
     const payload = {
+        MemberCardId: currentMember ? currentMember.memberCardId : null,
+        MemberName: currentMember ? currentMember.fullName : null,
+        MemberPhoneNumber: currentMember ? currentMember.phoneNumber : null,
+        LoyaltyPointsToUse: loyaltyPointsToUse,
         Items: checkoutItems,
         TotalAmount: totalAmount,
         PaymentMethod: 'Cash'
@@ -524,11 +783,22 @@ function checkout() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
+            let message = data.message;
+            if (currentMember) {
+                const pointsEarned = Math.round(subtotal * 0.01);
+                const pointsNetUsed = loyaltyPointsToUse > 0 ? loyaltyPointsToUse : 0;
+                message += `\n\nThành viên ${currentMember.fullName}:`;
+                message += `\n- Cộng điểm: +${pointsEarned}`;
+                if (pointsNetUsed > 0) {
+                    message += `\n- Trừ điểm: -${pointsNetUsed}`;
+                }
+            }
+            alert(message);
             cart = [];
-            discountAmount = 0;
+            loyaltyPointsToUse = 0;
+            clearMember();
             renderCart();
-            window.location.reload(); // Reload trang để hiển thị Stock còn lại
+            window.location.reload();
         } else {
             alert('Thanh toán thất bại: ' + data.message);
         }

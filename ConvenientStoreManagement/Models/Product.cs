@@ -42,7 +42,6 @@ namespace ConvenientStoreManagement.Models
         public virtual Category Category { get; set; }
 
         public virtual ICollection<ProductPrice> ProductPrices { get; set; } = new List<ProductPrice>();
-        public virtual ICollection<Promotion> Promotions { get; set; } = new List<Promotion>();
         public virtual ICollection<InventoryReceiptDetail> InventoryReceiptDetails { get; set; } = new List<InventoryReceiptDetail>();
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }

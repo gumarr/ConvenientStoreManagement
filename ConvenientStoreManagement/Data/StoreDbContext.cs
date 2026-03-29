@@ -14,7 +14,6 @@ namespace ConvenientStoreManagement.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductPrice> ProductPrices { get; set; }
-        public DbSet<Promotion> Promotions { get; set; }
         public DbSet<InventoryReceipt> InventoryReceipts { get; set; }
         public DbSet<InventoryReceiptDetail> InventoryReceiptDetails { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -23,6 +22,9 @@ namespace ConvenientStoreManagement.Data
         // ── New stat tables ─────────────────────────────────────────────────
         public DbSet<DailyProductStats> DailyProductStats { get; set; }
         public DbSet<DailySummaryStats> DailySummaryStats { get; set; }
+
+        // ── Member Card (Thẻ thành viên tích điểm) ──────────────────────────
+        public DbSet<MemberCard> MemberCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,11 +61,6 @@ namespace ConvenientStoreManagement.Data
                 entity.HasMany(e => e.ProductPrices)
                     .WithOne(pp => pp.Product)
                     .HasForeignKey(pp => pp.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.Promotions)
-                    .WithOne(p => p.Product)
-                    .HasForeignKey(p => p.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(e => e.InventoryReceiptDetails)
@@ -125,6 +122,12 @@ namespace ConvenientStoreManagement.Data
                     .WithMany()
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure MemberCard
+            modelBuilder.Entity<MemberCard>(entity =>
+            {
+                entity.HasIndex(e => e.PhoneNumber).IsUnique();
             });
         }
     }
