@@ -14,11 +14,13 @@ namespace ConvenientStoreManagement.Services.Implementations
     {
         private readonly StoreDbContext _context;
         private readonly IPricingService _pricingService;
+        private readonly IMemberCardService _memberCardService;
 
-        public OrderService(StoreDbContext context, IPricingService pricingService)
+        public OrderService(StoreDbContext context, IPricingService pricingService, IMemberCardService memberCardService)
         {
             _context = context;
             _pricingService = pricingService;
+            _memberCardService = memberCardService;
         }
 
         public async Task<List<Order>> GetAllOrdersAsync()
@@ -46,12 +48,42 @@ namespace ConvenientStoreManagement.Services.Implementations
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                // Tính subtotal
+                decimal subtotal = 0;
+                foreach (var item in model.Items)
+                {
+                    subtotal += item.UnitPrice * item.Quantity;
+                }
+
+                // Tính điểm tích lũy (1% của subtotal trước khi trừ điểm)
+                decimal loyaltyPointsEarned = Math.Round(subtotal * 0.01m, 2);
+
+                // Kiểm tra và trừ điểm từ thẻ thành viên (nếu có)
+                decimal loyaltyPointsUsed = 0;
+                if (model.MemberCardId.HasValue && model.MemberCardId.Value > 0 && model.LoyaltyPointsToUse > 0)
+                {
+                    // Kiểm tra điểm khả dụng
+                    var member = await _context.MemberCards.FindAsync(model.MemberCardId.Value);
+                    if (member != null && member.LoyaltyPoints >= model.LoyaltyPointsToUse)
+                    {
+                        // Trừ điểm
+                        bool pointsDeducted = await _memberCardService.UsePointsAsync(model.MemberCardId.Value, model.LoyaltyPointsToUse);
+                        if (pointsDeducted)
+                        {
+                            loyaltyPointsUsed = model.LoyaltyPointsToUse;
+                        }
+                    }
+                }
+
                 // 1. Insert into Orders table
                 var order = new Order
                 {
                     UserId = cashierUserId,
                     OrderDate = DateTime.Now,
-                    TotalAmount = model.TotalAmount
+                    TotalAmount = model.TotalAmount,
+                    MemberCardId = model.MemberCardId,
+                    LoyaltyPointsEarned = loyaltyPointsEarned,
+                    LoyaltyPointsUsed = loyaltyPointsUsed
                 };
 
                 _context.Orders.Add(order);
@@ -65,13 +97,44 @@ namespace ConvenientStoreManagement.Services.Implementations
 
                 if (summaryStats == null)
                 {
-                    summaryStats = new DailySummaryStats { Date = today };
+                    summaryStats = new DailySummaryStats 
+                    { 
+                        Date = today,
+                        CreatedBy = cashierUserId,
+                        Source = "Auto"
+                    };
                     _context.DailySummaryStats.Add(summaryStats);
                 }
+
+                // Prepare for discount distribution
+                decimal totalBeforeDiscount = subtotal;
+                decimal totalDiscountAllowed = loyaltyPointsUsed;
+                decimal remainingDiscount = totalDiscountAllowed;
+                int count = 0;
+                int totalItems = model.Items.Count;
 
                 // 2. Insert into OrderDetails, Update Stock, and Update Stats
                 foreach (var item in model.Items)
                 {
+                    count++;
+                    decimal itemTotal = item.UnitPrice * item.Quantity;
+                    
+                    // Distribute discount proportionally
+                    decimal itemDiscount = 0;
+                    if (totalBeforeDiscount > 0 && totalDiscountAllowed > 0)
+                    {
+                        if (count == totalItems)
+                        {
+                            // Last item absorbs the remaining rounding difference
+                            itemDiscount = remainingDiscount;
+                        }
+                        else
+                        {
+                            decimal ratio = itemTotal / totalBeforeDiscount;
+                            itemDiscount = Math.Round(totalDiscountAllowed * ratio, 2);
+                            remainingDiscount -= itemDiscount;
+                        }
+                    }
                     // Look up current average import price
                     decimal currentImportPrice = await _pricingService.GetCurrentImportPriceAsync(item.ProductId);
 
@@ -81,13 +144,13 @@ namespace ConvenientStoreManagement.Services.Implementations
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice,
-                        DiscountApplied = item.DiscountApplied,
+                        DiscountApplied = itemDiscount,
                         ImportCostSnapshot = currentImportPrice
                     };
                     _context.OrderDetails.Add(orderDetail);
 
                     // Stats calculation
-                    decimal lineRevenue = (item.UnitPrice * item.Quantity) - item.DiscountApplied;
+                    decimal lineRevenue = (item.UnitPrice * item.Quantity) - itemDiscount;
                     decimal lineCost = currentImportPrice * item.Quantity;
                     decimal lineProfit = lineRevenue - lineCost;
 
@@ -134,7 +197,13 @@ namespace ConvenientStoreManagement.Services.Implementations
 
                 await _context.SaveChangesAsync();
 
-                // 4. Commit transaction
+                // 4. Cộng điểm tích lũy cho thẻ thành viên (1% giá trị subtotal)
+                if (model.MemberCardId.HasValue && model.MemberCardId.Value > 0 && loyaltyPointsEarned > 0)
+                {
+                    await _memberCardService.AddPointsAsync(model.MemberCardId.Value, loyaltyPointsEarned);
+                }
+
+                // 5. Commit transaction
                 await transaction.CommitAsync();
                 return true;
             }

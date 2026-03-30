@@ -19,18 +19,19 @@ public class AIRecommendationService : IAIRecommendationService
     _aiService = aiService;
   }
 
-  public async Task<string> GetOrCreateAIAsync()
+  public async Task<AIRecommendation> GetOrCreateAIAsync(int? userId)
   {
     var today = DateTime.Today;
 
     var existing = await _context.AIRecommendations
+        .Include(x => x.User)
         .Where(x => x.Date == today)
         .OrderByDescending(x => x.Id)
         .FirstOrDefaultAsync();
 
     if (existing != null && existing.IsSuccess)
     {
-      return existing.Content;
+      return existing;
     }
 
     var stats = await _statsService.GetWeeklyStatsAsync();
@@ -48,30 +49,36 @@ public class AIRecommendationService : IAIRecommendationService
       }
 
       var clean = AIFormatter.Clean(result);
-
-      _context.AIRecommendations.Add(new AIRecommendation
+      
+      var recommendation = new AIRecommendation
       {
         Date = today,
         Content = clean,
-        IsSuccess = true
-      });
+        IsSuccess = true,
+        UserId = userId,
+        CreatedAt = DateTime.Now
+      };
 
+      _context.AIRecommendations.Add(recommendation);
       await _context.SaveChangesAsync();
-
-      return clean;
+      
+      return recommendation;
     }
     catch
     {
-      _context.AIRecommendations.Add(new AIRecommendation
+      var recommendation = new AIRecommendation
       {
         Date = today,
         Content = null,
-        IsSuccess = false
-      });
-
+        IsSuccess = false,
+        UserId = userId,
+        CreatedAt = DateTime.Now
+      };
+      
+      _context.AIRecommendations.Add(recommendation);
       await _context.SaveChangesAsync();
 
-      return "❌ AI hiện tại không khả dụng";
+      return recommendation;
     }
   }
 }

@@ -26,6 +26,11 @@ namespace ConvenientStoreManagement.Pages.Authentication
             [Display(Name = "Full Name")]
             public string FullName { get; set; } = string.Empty;
 
+            [Required(ErrorMessage = "Email is required.")]
+            [EmailAddress(ErrorMessage = "Invalid email format.")]
+            [Display(Name = "Email")]
+            public string Email { get; set; } = string.Empty;
+
             [Required(ErrorMessage = "Username is required.")]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
             public string Username { get; set; } = string.Empty;
@@ -67,6 +72,7 @@ namespace ConvenientStoreManagement.Pages.Authentication
                 var user = new User
                 {
                     FullName = Input.FullName,
+                    Email = Input.Email,
                     Username = Input.Username,
                     Password = Input.Password, // Simple insert as requested. In production, use hashed passwords.
                     Role = "Staff", // Default role

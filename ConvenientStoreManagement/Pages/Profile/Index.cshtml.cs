@@ -33,6 +33,11 @@ namespace ConvenientStoreManagement.Pages.Profile
 
         public class EditInfoModel
         {
+            [Required(ErrorMessage = "Username is required.")]
+            [StringLength(100, MinimumLength = 3)]
+            [Display(Name = "Username")]
+            public string Username { get; set; } = string.Empty;
+
             [Required(ErrorMessage = "Full name is required.")]
             [StringLength(150, MinimumLength = 2)]
             [Display(Name = "Full Name")]
@@ -75,6 +80,7 @@ namespace ConvenientStoreManagement.Pages.Profile
         public async Task<IActionResult> OnGetAsync()
         {
             await LoadUserAsync();
+            EditInfo.Username = CurrentUser.Username;
             EditInfo.FullName = CurrentUser.FullName;
             EditInfo.Email = CurrentUser.Email;
             return Page();
@@ -85,15 +91,53 @@ namespace ConvenientStoreManagement.Pages.Profile
             await LoadUserAsync();
             ActiveTab = "info";
 
-            ModelState.ClearValidationState(nameof(ChangePassword));
+            // ── FIX: Remove ALL ModelState keys not belonging to EditInfo.
+            // ClearValidationState alone does not remove existing errors from
+            // ChangePassword's [Required] fields that were populated during model binding.
+            foreach (var key in ModelState.Keys
+                .Where(k => !k.StartsWith("EditInfo"))
+                .ToList())
+            {
+                ModelState.Remove(key);
+            }
             ChangePassword = new ChangePasswordModel();
 
-            if (!TryValidateModel(EditInfo, nameof(EditInfo)))
-                return Page();
+            Console.WriteLine($"[DEBUG] ModelState valid after cleaning: {ModelState.IsValid}");
+            foreach (var kv in ModelState)
+            {
+                Console.WriteLine($"[DEBUG] ModelState[{kv.Key}] errors: {string.Join(", ", kv.Value.Errors.Select(e => e.ErrorMessage))}");
+            }
 
+            if (!TryValidateModel(EditInfo, nameof(EditInfo)))
+            {
+                Console.WriteLine("[DEBUG] EditInfo validation failed.");
+                return Page();
+            }
+
+            Console.WriteLine($"[DEBUG] Attempting to update profile for User ID: {CurrentUser.UserId}");
+            Console.WriteLine($"[DEBUG] Old Username: {CurrentUser.Username}, New Username: {EditInfo.Username}");
+            Console.WriteLine($"[DEBUG] New FullName: {EditInfo.FullName}");
+
+            // Ensure username is not taken by someone else
+            if (EditInfo.Username != CurrentUser.Username)
+            {
+                bool isTaken = await _context.Users.AnyAsync(u => u.Username == EditInfo.Username && u.UserId != CurrentUser.UserId);
+                if (isTaken)
+                {
+                    Console.WriteLine($"[DEBUG] Update failed: Username '{EditInfo.Username}' is already taken.");
+                    ModelState.AddModelError("EditInfo.Username", "Username is already taken.");
+                    return Page();
+                }
+            }
+
+            CurrentUser.Username = EditInfo.Username;
             CurrentUser.FullName = EditInfo.FullName;
-            await _context.SaveChangesAsync();
+
+            int rows = await _context.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] SaveChangesAsync affected {rows} row(s).");
             await RefreshClaimsAsync(CurrentUser);
+
+            Console.WriteLine("[DEBUG] Profile updated successfully.");
 
             SuccessMessage = "Profile updated successfully!";
             ActiveTab = "info";

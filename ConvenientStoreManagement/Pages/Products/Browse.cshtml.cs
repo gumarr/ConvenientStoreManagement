@@ -10,12 +10,14 @@ namespace ConvenientStoreManagement.Pages.Products
     {
         private readonly IProductService _productService;
         private readonly IOrderService _orderService;
+        private readonly IMemberCardService _memberCardService;
         private const int PageSize = 12;
 
-        public BrowseModel(IProductService productService, IOrderService orderService)
+        public BrowseModel(IProductService productService, IOrderService orderService, IMemberCardService memberCardService)
         {
             _productService = productService;
             _orderService = orderService;
+            _memberCardService = memberCardService;
         }
 
         // ── Bound properties ──────────────────────────────────────────────
@@ -48,7 +50,7 @@ namespace ConvenientStoreManagement.Pages.Products
         {
             if (payload == null || payload.Items == null || payload.Items.Count == 0)
             {
-                return new JsonResult(new { success = false, message = "Giỏ hàng trống hoặc dữ liệu không hợp lệ." });
+                return new JsonResult(new { success = false, message = "Cart is empty or invalid data." });
             }
 
             try
@@ -59,10 +61,64 @@ namespace ConvenientStoreManagement.Pages.Products
                 
                 if (result)
                 {
-                    return new JsonResult(new { success = true, message = "Thanh toán thành công!" });
+                    return new JsonResult(new { success = true, message = "Checkout successful!" });
                 }
                 
-                return new JsonResult(new { success = false, message = "Thanh toán thất bại, vui lòng thử lại." });
+                return new JsonResult(new { success = false, message = "Checkout failed, please try again." });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API để tìm kiếm thẻ thành viên theo số điện thoại
+        /// </summary>
+        public async Task<IActionResult> OnPostSearchMemberAsync([FromBody] SearchMemberRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.PhoneNumber))
+                {
+                    return new JsonResult(new { success = false, message = "Please enter phone number." });
+                }
+
+                var member = await _memberCardService.GetMemberByPhoneAsync(request.PhoneNumber);
+                
+                if (member != null)
+                {
+                    return new JsonResult(new { success = true, member = new { member.MemberCardId, member.FullName, member.PhoneNumber, member.LoyaltyPoints } });
+                }
+
+                return new JsonResult(new { success = false, message = "Member card not found." });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API để tạo thẻ thành viên mới
+        /// </summary>
+        public async Task<IActionResult> OnPostCreateMemberAsync([FromBody] CreateMemberRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.FullName) || string.IsNullOrWhiteSpace(request?.PhoneNumber))
+                {
+                    return new JsonResult(new { success = false, message = "Please enter full info (name and phone)." });
+                }
+
+                var newMember = await _memberCardService.CreateMemberAsync(request.FullName, request.PhoneNumber, request.Email);
+                
+                if (newMember != null)
+                {
+                    return new JsonResult(new { success = true, message = "Member card created successfully!", member = new { newMember.MemberCardId, newMember.FullName, newMember.PhoneNumber, newMember.LoyaltyPoints } });
+                }
+
+                return new JsonResult(new { success = false, message = "Cannot create member card (phone already exists?)." });
             }
             catch (Exception ex)
             {

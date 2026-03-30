@@ -14,7 +14,6 @@ namespace ConvenientStoreManagement.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductPrice> ProductPrices { get; set; }
-        public DbSet<Promotion> Promotions { get; set; }
         public DbSet<InventoryReceipt> InventoryReceipts { get; set; }
         public DbSet<InventoryReceiptDetail> InventoryReceiptDetails { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -23,6 +22,9 @@ namespace ConvenientStoreManagement.Data
         // ── New stat tables ─────────────────────────────────────────────────
         public DbSet<DailyProductStats> DailyProductStats { get; set; }
         public DbSet<DailySummaryStats> DailySummaryStats { get; set; }
+
+        // ── Member Card (Thẻ thành viên tích điểm) ──────────────────────────
+        public DbSet<MemberCard> MemberCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,11 +61,6 @@ namespace ConvenientStoreManagement.Data
                 entity.HasMany(e => e.ProductPrices)
                     .WithOne(pp => pp.Product)
                     .HasForeignKey(pp => pp.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasMany(e => e.Promotions)
-                    .WithOne(p => p.Product)
-                    .HasForeignKey(p => p.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(e => e.InventoryReceiptDetails)
@@ -107,10 +104,30 @@ namespace ConvenientStoreManagement.Data
                 entity.HasIndex(e => new { e.ProductId, e.Date }).IsUnique();
             });
 
-            // Configure DailySummaryStats — unique Date index
+            // Configure DailySummaryStats — unique Date index and foreign key
             modelBuilder.Entity<DailySummaryStats>(entity =>
             {
                 entity.HasIndex(e => e.Date).IsUnique();
+                
+                entity.HasOne(e => e.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure AIRecommendations
+            modelBuilder.Entity<AIRecommendation>(entity =>
+            {
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure MemberCard
+            modelBuilder.Entity<MemberCard>(entity =>
+            {
+                entity.HasIndex(e => e.PhoneNumber).IsUnique();
             });
         }
     }
